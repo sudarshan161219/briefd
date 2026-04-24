@@ -1,0 +1,301 @@
+/* ── Overlay ─────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+  animation: overlayIn 0.18s ease forwards;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Modal ───────────────────────────────────────── */
+.modal {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: modalIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-shadow:
+    0 0 0 0.5px var(--color-border-tertiary),
+    0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Header ──────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--label);
+  margin: 0 0 4px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--primary);
+  margin: 0;
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: transparent;
+  color: var(--label);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: var(--label);
+  color: var(--background);
+}
+
+.closeBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Format grid ─────────────────────────────────── */
+.formatGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 1rem 1.25rem 0;
+}
+
+.formatCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 8px 12px;
+  border-radius: 10px;
+  border: 0.5px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.formatCard:hover {
+  border-color: var(--ring);
+  background: #7743db;
+}
+
+.formatCard:active {
+  transform: scale(0.97);
+}
+
+.formatCardActive {
+  border-color: var(--ring) !important;
+  border-width: 1px;
+  background: #7743db !important;
+}
+
+.formatCardActive::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.formatIcon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}
+
+.formatIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.formatLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.formatExt {
+  font-size: 10px;
+  color: var(--label);
+  font-family: var(--font-mono, monospace);
+}
+
+.formatCard:hover .formatIcon,
+.formatCard:hover .formatLabel,
+.formatCard:hover .formatExt {
+  color: #fff;
+}
+
+.formatCardActive .formatIcon,
+.formatCardActive .formatLabel,
+.formatCardActive .formatExt {
+  color: #fff;
+}
+/* ── Description strip ───────────────────────────── */
+.descStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 1.25rem 0;
+  padding: 9px 12px;
+  background: var(--card);
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+}
+
+.descDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7743db;
+  flex-shrink: 0;
+}
+
+.descText {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Footer ──────────────────────────────────────── */
+.footer {
+  display: flex;
+  gap: 8px;
+  padding: 1rem 1.25rem 1.25rem;
+  margin-top: 10px;
+}
+
+.cancelBtn {
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.downloadBtn {
+  flex: 1;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+}
+
+.downloadBtn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.downloadBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.downloadBtn:disabled {
+  cursor: default;
+}
+
+.downloadBtnLoading {
+  opacity: 0.7;
+}
+
+.downloadBtnDone {
+  background: #1d9e75 !important;
+  opacity: 1 !important;
+}
+
+.btnIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

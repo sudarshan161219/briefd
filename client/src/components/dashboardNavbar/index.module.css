@@ -1,0 +1,189 @@
+/* ── Nav shell ────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  height: 44px;
+  background: var(--background);
+  border-bottom: 0.5px solid var(--border);
+
+  /* Subtle glass on scroll */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+}
+
+.inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ── Left ─────────────────────────────────────────── */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Brand wordmark */
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brandWord {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.brandDot {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label);
+  line-height: 1;
+}
+
+/* Separator */
+.sep {
+  display: block;
+  width: 0.5px;
+  height: 14px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* Workspace name */
+.workspace {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+/* ── Right ────────────────────────────────────────── */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Vertical rule between groups */
+.rule {
+  display: block;
+  width: 0.5px;
+  height: 14px;
+  background: var(--border);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+/* ── Ghost button (links + support) ───────────────── */
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--label);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    color 0.12s,
+    background 0.12s;
+  white-space: nowrap;
+}
+
+.ghostBtn:hover {
+  color: var(--primary);
+  background: var(--ring);
+}
+
+/* ── Icon-only button ─────────────────────────────── */
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-family: inherit;
+  color: var(--label);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    background 0.12s;
+}
+
+.iconBtn:hover {
+  color: var(--primary);
+  background: var(--ring);
+}
+
+/* ── Exit button ──────────────────────────────────── */
+.exitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label);
+  background: transparent;
+  border: 0.5px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    background 0.12s,
+    border-color 0.12s;
+  white-space: nowrap;
+}
+
+.exitBtn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.07);
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+/* Shared label (hides on narrow screens) */
+.btnLabel {
+  display: inline;
+}
+
+@media (max-width: 480px) {
+  .btnLabel {
+    display: none;
+  }
+  .workspace {
+    max-width: 100px;
+  }
+}

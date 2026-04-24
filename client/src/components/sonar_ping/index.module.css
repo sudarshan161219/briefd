@@ -1,0 +1,149 @@
+.panel {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav {
+  position: fixed;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2.5rem;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+
+.logo span {
+  color: var(--color-text-secondary);
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stage {
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.radarwrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.radarcenter {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #534ab7;
+  z-index: 2;
+  position: relative;
+}
+.radarring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid #534ab7;
+  animation: ring-expand 2s ease-out infinite;
+}
+.radarring:nth-child(2) {
+  animation-delay: 0.6s;
+}
+.radarring:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #1d9e75;
+}
+
+.big {
+  font-family: "DM Serif Display", serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+.small {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+.fieldchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  color: var(--color-text-primary);
+  margin-top: 16px;
+}
+
+@keyframes ring-expand {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.waitingText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #888888;
+  font-style: italic;
+}
+
+.spinningEmoji {
+  display: inline-block;
+  animation: flipHourglass 2s ease-in-out infinite;
+}
+
+@keyframes flipHourglass {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

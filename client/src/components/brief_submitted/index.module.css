@@ -1,0 +1,148 @@
+:root {
+  --purple: #7c6fe0;
+  --purple-light: #eeedfe;
+  --purple-dim: #2d2858;
+  --green: #1d9e75;
+  --green-light: #e1f5ee;
+  --green-dim: #0a3328;
+}
+
+.panel {
+  height: 100vh;
+}
+
+.stage {
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.svg circle {
+  stroke-dasharray: 170;
+  stroke-dashoffset: 170;
+  animation: circle-draw 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+}
+.svg polyline {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: check-draw 0.4s ease 0.75s forwards;
+}
+.title {
+  font-family: "DM Serif Display", serif;
+  font-size: 1.75rem;
+  color: var(--primary);
+  font-weight: 400;
+  opacity: 0;
+  animation: fade-up 0.5s ease 1s forwards;
+}
+.sub {
+  font-size: 13px;
+  color: var(--label);
+  opacity: 0;
+  animation: fade-up 0.5s ease 1.2s forwards;
+  margin-top: 8px;
+  line-height: 1.7;
+}
+.receipt {
+  display: flex;
+  gap: 0;
+  margin-top: 24px;
+  opacity: 0;
+  animation: fade-up 0.5s ease 1.4s forwards;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cell {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-right: 0.5px solid var(--border);
+}
+.cell:last-child {
+  border-right: none;
+}
+.celllabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--label);
+}
+.cellval {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  opacity: 0;
+  animation: fade-up 0.5s ease 0.75s forwards;
+}
+
+.piece {
+  position: absolute;
+  border-radius: 1px;
+  animation: cf-fall linear forwards;
+  top: -10px;
+}
+
+@keyframes cf-fall {
+  0% {
+    transform: translateY(-10px) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(340px) rotate(800deg);
+    opacity: 0;
+  }
+}
+
+@keyframes circle-draw {
+  from {
+    stroke-dashoffset: 170;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 50;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

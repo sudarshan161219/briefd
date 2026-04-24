@@ -1,0 +1,11 @@
+/* .app {
+  background-image: url("./assets/chromatic-spiral-abstract-rainbow-glass-spiral-lc.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-color: #e0e0e0;
+  background-blend-mode: luminosity;
+} */
+.app {
+  background-color: var(--background);
+}
