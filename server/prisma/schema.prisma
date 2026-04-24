@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User {
+  id              String   @id @default(uuid())
+  name        String
+  adminToken  String   @unique @default(uuid())
+
+  // public slug
+  slug        String   @unique
+
+  // Relation: A freelancer has many briefs and many clients
+  briefs        Brief[]
+  clients     Client[]
+}
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   
+  companyName String?
+
+  // A client belongs to a specific freelancer (User)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A client can have many briefs over time (repeat business)
+  briefs      Brief[]
+
+  // Ensure a freelancer doesn't have duplicate clients with the same email
+  @@unique([userId, email])
+}
+
+
+model Brief {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  createdAt       DateTime @default(now())
+  status          String   @default("PENDING") 
+
+  // Project Scope & Details
+  projectName     String?
+  primaryGoal     String?  @db.Text
+  needBuilt       String?  @db.Text
+  targetAudience  String?  @db.Text
+  keyFeatures     String?  @db.Text
+  avoid           String?  @db.Text
+  deadline        DateTime?
+  budgetRange     String?
+  
+  // Links & References
+  assetsUrls      String?  @db.Text
+  references      String?  @db.Text
+  additionalInfo  String?  @db.Text
+
+  // Relation fields
+  // Relations: Who created the brief link
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations: Who filled out the brief?
+  clientId        String?  
+  client          Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+}
