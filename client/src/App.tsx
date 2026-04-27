@@ -5,6 +5,8 @@ import { Home } from "@/pages/home/Home";
 import { ModalManager } from "@/components/modals/modalManager/ModalManager";
 import { DashboardLayout } from "@/layout/dashboardLayout/DashboardLayout";
 import { useGetUser } from "@/hooks/user/useGetUser";
+import { Dashboard } from "@/pages/dashboard/Dashboard";
+import { ClientBriefs } from "@/pages/clientBriefs/ClientBriefs";
 import styles from "./App.module.css";
 
 export const App = () => {
@@ -14,9 +16,13 @@ export const App = () => {
       <ModalManager />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<DashboardLayout />} />
         <Route path="/brief/:id" element={<ClientForm />} />
-        <Route path="/brief/:id/view" element={<ViewBrief />} />
+
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/clients/:id" element={<ClientBriefs />} />
+          <Route path="/brief/:id/view" element={<ViewBrief />} />
+        </Route>
       </Routes>
     </div>
   );

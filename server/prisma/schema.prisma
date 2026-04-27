@@ -29,7 +29,7 @@ model Client {
 
   // A client belongs to a specific freelancer (User)
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [adminToken], onDelete: Cascade)
 
   // A client can have many briefs over time (repeat business)
   briefs      Brief[]

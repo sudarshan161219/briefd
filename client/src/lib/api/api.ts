@@ -13,7 +13,7 @@ api.interceptors.request.use(
     const adminToken = localStorage.getItem(AUTH_TOKEN_KEY);
 
     if (adminToken) {
-      // Backend expects: "Authorization: Bearer <uuid>"
+      // Backend: "Authorization: Bearer <uuid>"
       config.headers.Authorization = `Bearer ${adminToken}`;
     }
 

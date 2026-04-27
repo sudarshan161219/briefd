@@ -2,6 +2,7 @@ import { useModalStore } from "@/store/useModalStore";
 import { CreateBriefModal } from "../createBriefModal/CreateBriefModal";
 import { CreateProfileModal } from "../createUserModal/CreateUserModal";
 import { DownloadModal } from "../downloadModal/Downloadmodal";
+import { CreateClientModal } from "../createClientModal/CreateClientModal";
 
 export const ModalManager = () => {
   const { isOpen, type } = useModalStore();
@@ -17,6 +18,9 @@ export const ModalManager = () => {
 
     case "CREATE_USER":
       return <CreateProfileModal />;
+
+    case "CREATE_CLIENT":
+      return <CreateClientModal />;
 
     default:
       return null;

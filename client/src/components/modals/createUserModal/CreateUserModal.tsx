@@ -39,11 +39,8 @@ export const CreateProfileModal = () => {
     e.preventDefault();
 
     try {
-      // 2. Just call the mutation!
-      // Axios handles the headers, and the hook's onSuccess handles saving the new token.
       await createUser({ name: name.trim() });
-
-      // 3. Route to dashboard and close modal
+      //  Route to dashboard and close modal
       navigate("/dashboard");
       closeModal();
     } catch (err) {

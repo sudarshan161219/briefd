@@ -3,11 +3,13 @@ import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { prisma } from "./utils/prismaClient.js";
+import { Prisma } from "../generated/prisma/client.js";
 import { fmt } from "./helpers/esc.js";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { buildHtml } from "./helpers/buildHtml.js";
 import puppeteer from "puppeteer";
+import { getAuthToken } from "./lib/getAuthToken.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -103,23 +105,16 @@ app.post("/api/user", async (req, res) => {
 // get user(freelancer)
 app.get("/api/user/me", async (req, res) => {
   try {
-    // 1. Grab the Authorization header
-    const authHeader = req.headers.authorization;
+    const adminToken = getAuthToken(req);
 
-    // 2. Check if it exists and follows the "Bearer <token>" format
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Unauthorized: Missing token." });
-    }
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
 
-    // 3. Extract just the token part
-    const adminToken = authHeader.split(" ")[1];
-
-    // 4. Look up the user
+    // Look up the user
     const user = await prisma.user.findUnique({
       where: { adminToken: adminToken },
     });
 
-    // 5. Handle invalid/expired tokens
+    //  Handle invalid/expired tokens
     if (!user) {
       return res.status(401).json({ error: "Unauthorized: Invalid token." });
     }
@@ -135,6 +130,186 @@ app.get("/api/user/me", async (req, res) => {
     res.status(500).json({
       error: "An unexpected error occurred while fetching user data.",
     });
+  }
+});
+
+// create client
+app.post("/api/client", async (req, res) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const { name, email, companyName } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ error: "Name and email are required." });
+    }
+
+    const client = await prisma.client.create({
+      data: {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        companyName: companyName?.trim(),
+        userId: adminToken,
+      },
+    });
+
+    res.status(201).json(client);
+  } catch (error) {}
+});
+
+// get all clients by user(adminToken)
+app.get("/api/client", async (req, res) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const {
+      search,
+      sortBy = "name", // Default sort by name
+      order = "asc", // Default order ascending
+      hasCompany, // Optional filter: 'true' or 'false'
+    } = req.query;
+
+    const whereClause: Prisma.ClientWhereInput = {
+      userId: adminToken,
+    };
+
+    if (search && typeof search === "string") {
+      whereClause.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { companyName: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (hasCompany === "true") {
+      whereClause.companyName = { not: null };
+    } else if (hasCompany === "false") {
+      whereClause.companyName = null;
+    }
+
+    const validSortFields = ["name", "email", "companyName"];
+    const sortField = validSortFields.includes(sortBy as string)
+      ? sortBy
+      : "name";
+    const sortOrder = order === "desc" ? "desc" : "asc";
+
+    const clients = await prisma.client.findMany({
+      where: whereClause,
+      orderBy: {
+        [sortField as string]: sortOrder,
+      },
+      include: {
+        briefs: true,
+      },
+    });
+    res.status(200).json(clients);
+  } catch (error) {
+    console.error("[Get Client Error]:", error);
+    res.status(500).json({ error: "Failed to fetch client." });
+  }
+});
+
+// get client by id and user(admintoken)
+app.get("/api/client/:id", async (req, res) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const { id } = req.params;
+
+    const client = await prisma.client.findUnique({
+      where: { id },
+    });
+
+    if (!client) {
+      return res.status(404).json({ error: "Client not found." });
+    }
+
+    if (client.userId !== adminToken) {
+      return res.status(403).json({
+        error: "Forbidden. This client belongs to another workspace.",
+      });
+    }
+
+    res.status(200).json(client);
+  } catch (error) {
+    console.error("[Get Client Error]:", error);
+    res.status(500).json({ error: "Failed to fetch client." });
+  }
+});
+
+// update client (name, email, companyName)
+app.patch("/api/client/:id", async (req, res) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const { id } = req.params;
+    const { name, email, companyName } = req.body;
+
+    // 1. Verify ownership before updating
+    const existingClient = await prisma.client.findUnique({ where: { id } });
+
+    if (!existingClient) {
+      return res.status(404).json({ error: "Client not found." });
+    }
+    if (existingClient.userId !== adminToken) {
+      return res.status(403).json({ error: "Forbidden." });
+    }
+
+    // 2. Perform the update
+    const updatedClient = await prisma.client.update({
+      where: { id },
+      data: {
+        ...(name && { name: name.trim() }),
+        ...(email && { email: email.trim().toLowerCase() }),
+        ...(companyName !== undefined && { companyName: companyName.trim() }),
+      },
+    });
+
+    res.status(200).json(updatedClient);
+  } catch (error) {
+    console.error("[Update Client Error]:", error);
+    if (error.code === "P2002") {
+      return res
+        .status(409)
+        .json({ error: "Another client already uses this email." });
+    }
+    res.status(500).json({ error: "Failed to update client." });
+  }
+});
+
+// delete cient
+app.delete("/api/client/:id", async (req, res) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const { id } = req.params;
+
+    // 1. Verify ownership before deleting
+    const existingClient = await prisma.client.findUnique({ where: { id } });
+
+    if (!existingClient) {
+      return res.status(404).json({ error: "Client not found." });
+    }
+    if (existingClient.userId !== adminToken) {
+      return res.status(403).json({ error: "Forbidden." });
+    }
+
+    // 2. Perform the delete
+    await prisma.client.delete({
+      where: { id },
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Client deleted successfully." });
+  } catch (error) {
+    console.error("[Delete Client Error]:", error);
+    res.status(500).json({ error: "Failed to delete client." });
   }
 });
 

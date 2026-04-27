@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type ModalType =
   | "CREATE_BRIEF"
   | "CREATE_USER"
-  | "ADD_CLIENT"
+  | "CREATE_CLIENT"
   | "DOWNLOAD"
   | "DELETE"
   | null;

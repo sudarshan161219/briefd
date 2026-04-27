@@ -1,5 +1,5 @@
 import { DashboardNavbar } from "@/components/dashboardNavbar/DashboardNavbar";
-import { Dashboard } from "@/pages/dashboard/Dashboard";
+import { Outlet } from "react-router-dom";
 
 export const DashboardLayout = () => {
   return (
@@ -9,7 +9,7 @@ export const DashboardLayout = () => {
 
       {/* Page Content */}
       <main className="animate-in fade-in duration-500">
-        <Dashboard />
+        <Outlet />
       </main>
     </div>
   );
