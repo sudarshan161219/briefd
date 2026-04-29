@@ -3,6 +3,7 @@ import { CreateBriefModal } from "../createBriefModal/CreateBriefModal";
 import { CreateProfileModal } from "../createUserModal/CreateUserModal";
 import { DownloadModal } from "../downloadModal/Downloadmodal";
 import { CreateClientModal } from "../createClientModal/CreateClientModal";
+import { EditClientModal } from "../editClientModal/EditClientModal";
 
 export const ModalManager = () => {
   const { isOpen, type } = useModalStore();
@@ -21,6 +22,9 @@ export const ModalManager = () => {
 
     case "CREATE_CLIENT":
       return <CreateClientModal />;
+
+    case "EDIT_CLIENT":
+      return <EditClientModal />;
 
     default:
       return null;

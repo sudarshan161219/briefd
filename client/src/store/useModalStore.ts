@@ -4,6 +4,7 @@ export type ModalType =
   | "CREATE_BRIEF"
   | "CREATE_USER"
   | "CREATE_CLIENT"
+  | "EDIT_CLIENT"
   | "DOWNLOAD"
   | "DELETE"
   | null;

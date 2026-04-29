@@ -7,6 +7,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { fmt } from "./helpers/esc.js";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
+import { generateSlug } from "./helpers/generateSlug.js";
 import { buildHtml } from "./helpers/buildHtml.js";
 import puppeteer from "puppeteer";
 import { getAuthToken } from "./lib/getAuthToken.js";
@@ -313,32 +314,64 @@ app.delete("/api/client/:id", async (req, res) => {
   }
 });
 
-// 1. Freelancer creates a new blank brief link
+//  Freelancer creates a new blank brief link
 app.post("/api/briefs", async (req, res) => {
   try {
-    const data = req.body;
-    const { name } = data;
-    // 1. Input Validation (Client Error - 400)
-    if (!name || typeof name !== "string" || name.trim() === "") {
-      return res
-        .status(400)
-        .json({ error: "A valid 'name' is required to generate a brief." });
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const user = await prisma.user.findUnique({
+      where: { adminToken },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid token. User not found." });
     }
 
-    const baseSlug = slugify.default(name, { lower: true, strict: true });
-    const suffix = nanoid(5);
-    const slug = `${baseSlug}-${suffix}`;
+    const { name, clientId } = req.body;
 
-    // 2. Database Operation
-    const brief = await prisma.brief.create({
+    if (!name) {
+      return res.status(400).json({ error: "Brief name is required." });
+    }
+
+    if (clientId) {
+      const client = await prisma.client.findUnique({
+        where: { id: clientId },
+      });
+
+      if (!client || client.userId !== adminToken) {
+        return res.status(403).json({
+          error: "Forbidden. Client does not exist or belong to you.",
+        });
+      }
+    }
+
+    // Creating unique Slug
+    let uniqueSlug = generateSlug(name);
+
+    let isSlugUnique = false;
+    while (!isSlugUnique) {
+      const existing = await prisma.brief.findUnique({
+        where: { slug: uniqueSlug },
+      });
+      if (!existing) isSlugUnique = true;
+      else uniqueSlug = generateSlug(name);
+    }
+
+    //  Database Operation
+    const newBrief = await prisma.brief.create({
       data: {
-        name: name,
-        slug: slug,
+        name: name.trim(),
+        slug: uniqueSlug,
+        userId: user.id,
+        clientId: clientId || null,
+        status: "PENDING",
       },
     });
 
-    // 3. Success Response
-    res.status(201).json({ id: brief.id });
+    //  Success Response
+    res.status(201).json(newBrief);
   } catch (error) {
     console.error("[Create Brief Error]:", error);
     if (error.code === "P2002") {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useClient } from "@/hooks/client/useClient";
+import { useEditClientStore } from "@/store/client/useEditClientStore";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -14,8 +15,6 @@ import {
   Trash2,
   Clock,
   CheckCircle2,
-  X,
-  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useModalStore } from "@/store/useModalStore";
@@ -47,128 +46,17 @@ const MOCK_BRIEFS: Brief[] = [
   },
 ];
 
-// ── Edit modal ─────────────────────────────────────────────
-interface EditClientModalProps {
-  client: { name: string; email: string; companyName?: string };
-  onSave: (d: { name: string; email: string; companyName: string }) => void;
-  onClose: () => void;
-}
-
-const EditClientModal = ({ client, onSave, onClose }: EditClientModalProps) => {
-  const [form, setForm] = useState({
-    name: client.name,
-    email: client.email,
-    companyName: client.companyName || "",
-  });
-  const [saving, setSaving] = useState(false);
-
-  const set =
-    (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  const handleSave = async () => {
-    if (!form.name.trim()) return;
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 600)); // replace with real API
-    onSave(form);
-    setSaving(false);
-    toast.success("Client updated");
-  };
-
-  return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <div>
-            <p className={styles.modalEyebrow}>Client</p>
-            <h3 className={styles.modalTitle}>Edit details</h3>
-          </div>
-          <button
-            className={styles.modalClose}
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        <div className={styles.modalBody}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Name</label>
-            <input
-              className={styles.input}
-              value={form.name}
-              onChange={set("name")}
-              placeholder="Client name"
-              autoFocus
-            />
-          </div>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Email</label>
-            <input
-              className={styles.input}
-              type="email"
-              value={form.email}
-              onChange={set("email")}
-              placeholder="client@company.com"
-            />
-          </div>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>
-              Company <span className={styles.optional}>optional</span>
-            </label>
-            <input
-              className={styles.input}
-              value={form.companyName}
-              onChange={set("companyName")}
-              placeholder="Company Inc."
-            />
-          </div>
-        </div>
-
-        <div className={styles.modalFooter}>
-          <Button
-            variant="secondary"
-            className={styles.cancelBtn}
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            className={styles.saveBtn}
-            onClick={handleSave}
-            disabled={saving || !form.name.trim()}
-          >
-            {saving ? (
-              <>
-                <span className={styles.spinner} />
-                Saving…
-              </>
-            ) : (
-              <>
-                <Save size={13} />
-                Save changes
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ── Main ───────────────────────────────────────────────────
 export const ClientBriefs = () => {
   const { id } = useParams();
-  const { data, isLoading } = useClient(id);
+  const { data: client, isLoading } = useClient(id);
   const { openModal } = useModalStore();
+  const { setClient } = useEditClientStore();
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [showEdit, setShowEdit] = useState(false);
-  const [localClient, setLocalClient] = useState<any>(null);
 
   const briefs = MOCK_BRIEFS;
-  const client = localClient ?? data;
+
   const completed = briefs.filter((b) => b.status === "COMPLETED").length;
   const pending = briefs.filter((b) => b.status === "PENDING").length;
 
@@ -177,6 +65,11 @@ export const ClientBriefs = () => {
     setCopiedId(briefId);
     toast.success("Link copied");
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleEdit = () => {
+    openModal("EDIT_CLIENT");
+    setClient(client ?? null);
   };
 
   const handleDelete = () => {
@@ -190,14 +83,7 @@ export const ClientBriefs = () => {
     toast.success("Client deleted");
   };
 
-  const handleSave = (updated: {
-    name: string;
-    email: string;
-    companyName: string;
-  }) => {
-    setLocalClient((prev: any) => ({ ...(prev ?? data), ...updated }));
-    setShowEdit(false);
-  };
+  console.log(client);
 
   return (
     <div className={styles.page}>
@@ -237,7 +123,7 @@ export const ClientBriefs = () => {
               <button
                 className={styles.iconBtn}
                 title="Edit client"
-                onClick={() => setShowEdit(true)}
+                onClick={handleEdit}
               >
                 <Pencil size={13} />
               </button>
@@ -368,14 +254,6 @@ export const ClientBriefs = () => {
           </div>
         )}
       </main>
-
-      {showEdit && client && (
-        <EditClientModal
-          client={client}
-          onSave={handleSave}
-          onClose={() => setShowEdit(false)}
-        />
-      )}
     </div>
   );
 };

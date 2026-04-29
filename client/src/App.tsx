@@ -7,12 +7,14 @@ import { DashboardLayout } from "@/layout/dashboardLayout/DashboardLayout";
 import { useGetUser } from "@/hooks/user/useGetUser";
 import { Dashboard } from "@/pages/dashboard/Dashboard";
 import { ClientBriefs } from "@/pages/clientBriefs/ClientBriefs";
+import { Toaster } from "@/components/ui/sonner";
 import styles from "./App.module.css";
 
 export const App = () => {
   useGetUser();
   return (
     <div className={styles.app}>
+      <Toaster richColors />
       <ModalManager />
       <Routes>
         <Route path="/" element={<Home />} />

@@ -9,7 +9,7 @@ export interface Client {
   id: string;
   name: string;
   email: string;
-  companyName: string | null;
+  companyName?: string;
   userId: string;
   briefs: [];
 }
@@ -42,16 +42,20 @@ const createClient = async (payload: CreateClientPayload): Promise<Client> => {
   return response.data;
 };
 
-const fetchClientById = async (id: string): Promise<Client> => {
-  const response = await api.get<Client>(`/client/${id}`);
-  return response.data;
+const fetchClientById = async (id: string): Promise<Client | undefined> => {
+  try {
+    const response = await api.get<Client>(`/client/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch client:", error);
+    return undefined;
+  }
 };
 
 const fetchAllClients = async (
   params?: ClientQueryParams,
 ): Promise<Client[]> => {
   const response = await api.get<Client[]>("/client", { params });
-  console.log("RAW AXIOS DATA:", response.data);
   return response.data;
 };
 
@@ -120,7 +124,6 @@ export const useUpdateClient = () => {
   return useMutation({
     mutationFn: updateClient,
     onSuccess: (updatedClient) => {
-      // Invalidate the specific client's cache and the master list
       queryClient.invalidateQueries({ queryKey: ["client", updatedClient.id] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
