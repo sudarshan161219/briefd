@@ -7,7 +7,7 @@ import styles from "./index.module.css";
 
 export const DashboardNavbar = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { openModal } = useModalStore();
   const { theme, toggleTheme } = useThemeStore();
 

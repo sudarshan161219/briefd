@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowRight, Sun, Moon, Coffee } from "lucide-react";
 import { useThemeStore } from "@/store/theme/useThemeStore";
 import styles from "./index.module.css";
@@ -10,41 +9,6 @@ export const Home = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated, user } = useAuthStore();
   const { openModal } = useModalStore();
-  const [isCopied, setIsCopied] = useState(false);
-  const [isHighlighted, setIsHighlighted] = useState(false);
-  const [links, setLinks] = useState<{ share: string; view: string } | null>(
-    null,
-  );
-  const navigate = useNavigate();
-  const demoAreaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (links && demoAreaRef.current) {
-      demoAreaRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-
-      setIsHighlighted(true);
-
-      const timer = setTimeout(() => {
-        setIsHighlighted(false);
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [links]);
-
-  const handleCopy = async () => {
-    if (!links) return;
-    try {
-      await navigator.clipboard.writeText(links.share);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      console.error("Failed to copy link:", error);
-    }
-  };
 
   return (
     <div className={styles.page}>

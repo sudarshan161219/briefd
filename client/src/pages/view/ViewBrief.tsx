@@ -6,7 +6,9 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { SonarPing } from "@/components/sonar_ping/SonarPing";
 import { useModalStore } from "@/store/useModalStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { useThemeStore } from "@/store/theme/useThemeStore";
+import { useBrief } from "@/hooks/brief/useBrief";
 import styles from "./index.module.css";
 
 const fieldLabels: Record<string, string> = {
@@ -28,25 +30,21 @@ const fieldLabels: Record<string, string> = {
 
 export const ViewBrief = () => {
   const { id } = useParams();
+  const { data: brief, isLoading } = useBrief(id);
   const { theme, toggleTheme } = useThemeStore();
   const { openModal } = useModalStore();
-  const [brief, setBrief] = useState<any>(null);
   const [activeField, setActiveField] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/briefs/${id}`)
-      .then((res) => res.json())
-      .then((data) => setBrief(data))
-      .catch((err) => console.error("Failed to fetch brief:", err));
-
     const socket = io("http://localhost:8080");
 
     socket.on("connect", () => {
       console.log(`🔌 Dashboard connected to socket with ID: ${socket.id}`);
     });
 
-    socket.on(`brief-updated-${id}`, (updatedBrief) => {
-      setBrief(updatedBrief);
+    socket.on(`brief-updated-${id}`, () => {
+      queryClient.invalidateQueries({ queryKey: ["brief", id] });
     });
 
     // Add logs here!
@@ -67,7 +65,7 @@ export const ViewBrief = () => {
     return () => {
       socket.disconnect();
     };
-  }, [id]);
+  }, [id, queryClient]);
 
   // Helpers for dynamic data formatting
   const getInitials = (name: string) => {
@@ -115,7 +113,7 @@ export const ViewBrief = () => {
       </div>
     );
 
-  if (brief.status === "PENDING") {
+  if (brief?.status === "PENDING") {
     return <SonarPing activeField={activeField} fieldLabels={fieldLabels} />;
   }
 
@@ -165,7 +163,7 @@ export const ViewBrief = () => {
 
       <div className={styles.container}>
         <h2 className={styles.srOnly}>
-          Brief dashboard for {brief.projectName || "Project"}
+          Brief dashboard for {brief?.projectName || "Project"}
         </h2>
 
         <div className={styles.topbar}>
@@ -231,7 +229,7 @@ export const ViewBrief = () => {
           <div className={styles.stat}>
             <div className={styles.statLabel}>Company</div>
             <div className={styles.statVal} style={{ fontSize: "15px" }}>
-              {brief.companyName || "N/A"}
+              {brief.client.companyName || "N/A"}
             </div>
           </div>
           <div className={styles.stat}>
@@ -255,10 +253,10 @@ export const ViewBrief = () => {
                 style={{ alignItems: "center", gap: "10px" }}
               >
                 <div className={styles.avatar}>
-                  {getInitials(brief.clientName)}
+                  {getInitials(brief.client.name)}
                 </div>
                 <div>
-                  <div className={styles.metaVal}>{brief.clientName}</div>
+                  <div className={styles.metaVal}>{brief.client.name}</div>
                   <div className={styles.metaKey}>Client</div>
                 </div>
               </div>
@@ -277,14 +275,14 @@ export const ViewBrief = () => {
                 <div>
                   <div className={styles.metaKey}>Email</div>
                   <a
-                    href={`mailto:${brief.clientEmail}`}
+                    href={`mailto:${brief.client.email}`}
                     className={styles.metaLink}
                   >
-                    {brief.clientEmail}
+                    {brief.client.email}
                   </a>
                 </div>
               </div>
-              {brief.companyName && (
+              {brief.client.companyName && (
                 <div className={styles.metaRow}>
                   <div className={styles.metaIcon}>
                     <svg
@@ -299,7 +297,7 @@ export const ViewBrief = () => {
                   </div>
                   <div>
                     <div className={styles.metaKey}>Company</div>
-                    <div className={styles.metaVal}>{brief.companyName}</div>
+                    <div className={styles.metaVal}>{brief.client.companyName}</div>
                   </div>
                 </div>
               )}

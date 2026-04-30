@@ -59,8 +59,6 @@ export const ClientBriefs = () => {
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // const briefss = MOCK_BRIEFS;
-
   const completed = briefs?.filter((b) => b.status === "COMPLETED").length;
   const pending = briefs?.filter((b) => b.status === "PENDING").length;
 
@@ -245,7 +243,7 @@ export const ClientBriefs = () => {
                         </button>
                       </div>
                       <Link
-                        to={`/briefs/${brief.id}`}
+                        to={`/brief/${brief.id}/view`}
                         className={styles.openBtn}
                       >
                         Open <ArrowRight size={12} />

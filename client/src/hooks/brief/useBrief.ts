@@ -30,6 +30,12 @@ export interface Brief {
   userId: string;
   clientId: string | null;
 
+  client: {
+    name: string;
+    companyName: string;
+    email: string;
+  };
+
   // Included on public routes
   user?: {
     name: string;
@@ -72,6 +78,11 @@ const fetchBriefs = async (clientId?: string): Promise<Brief[]> => {
   const response = await api.get<Brief[]>("/brief", {
     params: clientId ? { clientId } : undefined,
   });
+  return response.data;
+};
+
+const fetchBrief = async (id: string): Promise<Brief> => {
+  const response = await api.get<Brief>(`/brief/${id}`);
   return response.data;
 };
 
@@ -124,9 +135,16 @@ export const useCreateBrief = () => {
 
 export const useBriefs = (clientId?: string) => {
   return useQuery({
-    // Adding clientId to the key ensures it caches lists for different clients separately
     queryKey: ["briefs", clientId],
     queryFn: () => fetchBriefs(clientId),
+  });
+};
+
+export const useBrief = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ["breif", id],
+    queryFn: () => fetchBrief(id!),
+    enabled: !!id,
   });
 };
 

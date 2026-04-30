@@ -443,11 +443,39 @@ app.get("/api/brief", async (req, res) => {
   }
 });
 
-// 2. Fetch brief (for client form or freelancer view)
+//  Fetch brief (for client form or freelancer view)
 app.get("/api/brief/:id", async (req, res) => {
-  const brief = await prisma.brief.findUnique({ where: { id: req.params.id } });
-  if (!brief) return res.status(404).json({ error: "Brief not found" });
-  res.json(brief);
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const user = await prisma.user.findUnique({
+      where: { adminToken },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid token. User not found." });
+    }
+
+    const brief = await prisma.brief.findUnique({
+      where: {
+        id: req.params.id,
+        userId: user.id,
+      },
+      include: {
+        client: {
+          select: { name: true, companyName: true, email: true },
+        },
+      },
+    });
+
+    if (!brief) return res.status(404).json({ error: "Brief not found" });
+    res.status(200).json(brief);
+  } catch (error) {
+    console.error("[Fetch Brief Error]:", error);
+    res.status(500).json({ error: "Failed to fetch brief." });
+  }
 });
 
 // 3. Client submits the brief
