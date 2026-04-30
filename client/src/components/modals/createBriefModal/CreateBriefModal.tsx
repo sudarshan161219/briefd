@@ -1,22 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModalStore } from "@/store/useModalStore";
+import { useCreateBrief } from "@/hooks/brief/useBrief";
+
 import { Button } from "@/components/ui/button";
 import styles from "./index.module.css";
+import { useClientIdStore } from "@/store/client/useClientIdStore";
 
 export const CreateBriefModal = () => {
   const { isOpen, closeModal } = useModalStore();
+  const { clientId } = useClientIdStore();
   const navigate = useNavigate();
   const overlayRef = useRef<HTMLDivElement>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
+  const { mutateAsync: createBrief, isPending } = useCreateBrief();
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [prefillData, setPrefillData] = useState({
-    name: "",
-    clientName: "",
-    clientEmail: "",
-    companyName: "",
-  });
+  // Form State
+  const [name, setName] = useState("");
 
   // Focus first input on open
   useEffect(() => {
@@ -32,53 +32,29 @@ export const CreateBriefModal = () => {
     };
     if (isOpen) document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [isOpen, closeModal]);
+  }, [closeModal, isOpen]);
 
   if (!isOpen) return null;
 
-  const set =
-    (k: keyof typeof prefillData) => (e: React.ChangeEvent<HTMLInputElement>) =>
-      setPrefillData((prev) => ({ ...prev, [k]: e.target.value }));
+  const handleClose = () => {
+    setName("");
+    closeModal();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsGenerating(true);
 
     try {
-      const res = await fetch("http://localhost:8080/api/briefs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(prefillData),
+     await createBrief({
+        name: name.trim(),
+        clientId: clientId,
       });
 
-      if (!res.ok) throw new Error("Failed to generate brief");
-
-      const data = await res.json();
-      const shareLink = `${window.location.origin}/brief/${data.id}`;
-      const viewLink = `${window.location.origin}/brief/${data.id}/view`;
-
-      const existing = JSON.parse(
-        localStorage.getItem("brief-history") || "[]",
-      );
-      localStorage.setItem(
-        "brief-history",
-        JSON.stringify([
-          {
-            id: data.id,
-            name: prefillData.name,
-            client: shareLink,
-            user: viewLink,
-            date: new Date().toISOString(),
-          },
-          ...existing,
-        ]),
-      );
-
-      closeModal();
-      navigate("/dashboard");
+      handleClose();
+      // Navigate straight to the new brief's internal page
+      // navigate(`/clients/${newBrief.clientId}`);
     } catch (err) {
-      console.error(err);
-      setIsGenerating(false);
+      console.error("Failed to create brief:", err);
     }
   };
 
@@ -86,7 +62,7 @@ export const CreateBriefModal = () => {
     <div
       className={styles.overlay}
       ref={overlayRef}
-      onClick={(e) => e.target === overlayRef.current && closeModal()}
+      onClick={(e) => e.target === overlayRef.current && handleClose()}
       aria-modal="true"
       role="dialog"
       aria-label="Create new brief"
@@ -95,12 +71,12 @@ export const CreateBriefModal = () => {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerText}>
-            <p className={styles.eyebrow}>Briefd</p>
+            <p className={styles.eyebrow}>Workspace</p>
             <h2 className={styles.title}>New brief</h2>
           </div>
           <button
             className={styles.closeBtn}
-            onClick={closeModal}
+            onClick={handleClose}
             aria-label="Close"
           >
             <svg
@@ -118,85 +94,50 @@ export const CreateBriefModal = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Project name — full width, prominent */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Project name</label>
-            <input
-              ref={firstInputRef}
-              required
-              placeholder="e.g. E-commerce Redesign"
-              value={prefillData.name}
-              onChange={set("name")}
-              className={`${styles.input} ${styles.inputLarge}`}
-              disabled={isGenerating}
-            />
-          </div>
-
-          <div className={styles.divider} />
-
-          {/* Client row */}
-          <div className={styles.row}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>
-                Client name
-                <span className={styles.optional}>optional</span>
-              </label>
+          <div
+            className={styles.fieldGroup}
+            style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
+          >
+            {/* Project Name Input */}
+            <div>
+              <label className={styles.label}>Project name</label>
               <input
-                placeholder="Jane Smith"
-                value={prefillData.clientName}
-                onChange={set("clientName")}
+                ref={firstInputRef}
+                required
+                placeholder="e.g. E-commerce Redesign"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className={styles.input}
-                disabled={isGenerating}
+                disabled={isPending}
               />
             </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>
-                Client email
-                <span className={styles.optional}>optional</span>
-              </label>
-              <input
-                type="email"
-                placeholder="jane@company.com"
-                value={prefillData.clientEmail}
-                onChange={set("clientEmail")}
-                className={styles.input}
-                disabled={isGenerating}
-              />
-            </div>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>
-              Company
-              <span className={styles.optional}>optional</span>
-            </label>
-            <input
-              placeholder="Acme Inc."
-              value={prefillData.companyName}
-              onChange={set("companyName")}
-              className={styles.input}
-              disabled={isGenerating}
-            />
           </div>
 
           {/* Footer */}
-          <div className={styles.footer}>
-            <p className={styles.footerHint}>
-              A shareable link will be generated for your client.
-            </p>
+          <div
+            className={styles.footer}
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
             <Button
               type="submit"
               className={styles.submitBtn}
-              disabled={isGenerating || !prefillData.name.trim()}
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+              disabled={isPending || !name.trim()}
             >
-              {isGenerating ? (
+              {isPending ? (
                 <>
                   <span className={styles.spinner} />
-                  Generating…
+                  Creating…
                 </>
               ) : (
                 <>
-                  Generate link
+                  Create Brief
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -204,7 +145,7 @@ export const CreateBriefModal = () => {
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className={styles.btnIcon}
+                    style={{ width: "16px", height: "16px" }}
                   >
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />

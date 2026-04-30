@@ -140,6 +140,18 @@ app.post("/api/client", async (req, res) => {
     const adminToken = getAuthToken(req);
     if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
 
+    // client creation limitation
+    const MAX_CLIENTS = 5;
+    const clientCount = await prisma.client.count({
+      where: { userId: adminToken },
+    });
+
+    if (clientCount >= MAX_CLIENTS) {
+      return res.status(403).json({
+        error: `limit reached: You can only have up to ${MAX_CLIENTS} clients.`,
+      });
+    }
+
     const { name, email, companyName } = req.body;
 
     if (!name || !email) {
@@ -314,8 +326,9 @@ app.delete("/api/client/:id", async (req, res) => {
   }
 });
 
-//  Freelancer creates a new blank brief link
-app.post("/api/briefs", async (req, res) => {
+//- Brief -//
+// create brief
+app.post("/api/brief", async (req, res) => {
   try {
     const adminToken = getAuthToken(req);
     if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
@@ -327,6 +340,18 @@ app.post("/api/briefs", async (req, res) => {
 
     if (!user) {
       return res.status(401).json({ error: "Invalid token. User not found." });
+    }
+
+    // brief creation limitation
+    const MAX_BRIEFS = 5;
+    const briefCount = await prisma.brief.count({
+      where: { userId: user.id },
+    });
+
+    if (briefCount >= MAX_BRIEFS) {
+      return res.status(403).json({
+        error: `Showcase limit reached: You can only create up to ${MAX_BRIEFS} briefs.`,
+      });
     }
 
     const { name, clientId } = req.body;
@@ -385,15 +410,48 @@ app.post("/api/briefs", async (req, res) => {
   }
 });
 
+app.get("/api/brief", async (req, res) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+    const user = await prisma.user.findUnique({
+      where: { adminToken },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid token. User not found." });
+    }
+
+    const { clientId } = req.query;
+
+    const briefs = await prisma.brief.findMany({
+      where: {
+        userId: user.id,
+        clientId: String(clientId),
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.status(200).json(briefs);
+  } catch (error) {
+    console.error("[Fetch Briefs Error]:", error);
+    res.status(500).json({ error: "Failed to fetch briefs." });
+  }
+});
+
 // 2. Fetch brief (for client form or freelancer view)
-app.get("/api/briefs/:id", async (req, res) => {
+app.get("/api/brief/:id", async (req, res) => {
   const brief = await prisma.brief.findUnique({ where: { id: req.params.id } });
   if (!brief) return res.status(404).json({ error: "Brief not found" });
   res.json(brief);
 });
 
 // 3. Client submits the brief
-app.put("/api/briefs/:id", async (req, res) => {
+app.put("/api/brief/:id", async (req, res) => {
   try {
     const updatedBrief = await prisma.brief.update({
       where: { id: req.params.id },
@@ -410,7 +468,7 @@ app.put("/api/briefs/:id", async (req, res) => {
 });
 
 // 4. User and Client Single source of truth (Download a copy)
-app.get("/api/briefs/:id/download", async (req, res) => {
+app.get("/api/brief/:id/download", async (req, res) => {
   try {
     const { id } = req.params;
     const format = req.query.format as string; // 'txt' | 'doc' | 'pdf'

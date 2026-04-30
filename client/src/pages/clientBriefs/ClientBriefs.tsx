@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useClient } from "@/hooks/client/useClient";
 import { useEditClientStore } from "@/store/client/useEditClientStore";
+import { useClientIdStore } from "@/store/client/useClientIdStore";
 import { Button } from "@/components/ui/button";
+import { useBriefs } from "@/hooks/brief/useBrief";
 import {
   ArrowLeft,
   Plus,
@@ -50,15 +52,17 @@ const MOCK_BRIEFS: Brief[] = [
 export const ClientBriefs = () => {
   const { id } = useParams();
   const { data: client, isLoading } = useClient(id);
+  const { data: briefs, isLoading: isBriefsLoading } = useBriefs(id);
   const { openModal } = useModalStore();
   const { setClient } = useEditClientStore();
+  const { setClientId } = useClientIdStore();
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const briefs = MOCK_BRIEFS;
+  // const briefss = MOCK_BRIEFS;
 
-  const completed = briefs.filter((b) => b.status === "COMPLETED").length;
-  const pending = briefs.filter((b) => b.status === "PENDING").length;
+  const completed = briefs?.filter((b) => b.status === "COMPLETED").length;
+  const pending = briefs?.filter((b) => b.status === "PENDING").length;
 
   const handleCopy = (slug: string, briefId: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/b/${slug}`);
@@ -83,7 +87,10 @@ export const ClientBriefs = () => {
     toast.success("Client deleted");
   };
 
-  console.log(client);
+  const handleCreateBrief = () => {
+    setClientId(id ?? null);
+    openModal("CREATE_BRIEF");
+  };
 
   return (
     <div className={styles.page}>
@@ -135,10 +142,7 @@ export const ClientBriefs = () => {
                 <Trash2 size={13} />
               </button>
               <div className={styles.actionRule} />
-              <Button
-                className={styles.newBtn}
-                onClick={() => openModal("CREATE_BRIEF")}
-              >
+              <Button className={styles.newBtn} onClick={handleCreateBrief}>
                 <Plus size={13} /> New brief
               </Button>
             </div>
@@ -148,7 +152,7 @@ export const ClientBriefs = () => {
         {/* ── Stats ── */}
         <div className={styles.statStrip}>
           <div className={styles.stat}>
-            <span className={styles.statVal}>{briefs.length}</span>
+            <span className={styles.statVal}>{briefs?.length}</span>
             <span className={styles.statLabel}>Total</span>
           </div>
           <div className={styles.statDivider} />
@@ -168,7 +172,7 @@ export const ClientBriefs = () => {
         </div>
 
         {/* ── Brief grid ── */}
-        {briefs.length === 0 ? (
+        {briefs?.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}>
               <svg
@@ -198,7 +202,7 @@ export const ClientBriefs = () => {
           </div>
         ) : (
           <div className={styles.briefGrid}>
-            {briefs.map((brief) => {
+            {briefs?.map((brief) => {
               const url = `${window.location.origin}/b/${brief.slug}`;
               const isCopied = copiedId === brief.id;
               const isDone = brief.status === "COMPLETED";
