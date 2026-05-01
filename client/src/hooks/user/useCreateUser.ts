@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api, { setAuthToken } from "@/lib/api/api";
-import type { User } from "@/types/user/user";
 
 export interface CreateUserPayload {
   name: string;

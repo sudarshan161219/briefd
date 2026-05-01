@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { clearAuthToken } from "@/lib/api/api"; // Adjust path to your axios setup
+import { clearAuthToken } from "@/lib/api/api";
 
 interface User {
   name: string;
@@ -10,7 +10,7 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-
+  isInitialized: boolean;
   // Actions
   setUser: (user: User | null) => void;
   logout: () => void;
@@ -19,10 +19,17 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
+  isInitialized: false,
   setUser: (user) =>
-    set({
-      user,
-      isAuthenticated: !!user,
+    set((state) => {
+      // don't update if same value
+      if (state.user === user) return state;
+
+      return {
+        user,
+        isAuthenticated: !!user,
+        isInitialized: true,
+      };
     }),
 
   logout: () => {

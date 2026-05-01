@@ -403,23 +403,23 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  border: 0.5px solid var(--color-border-secondary);
-  background: var(--color-background-secondary);
+  border: 0.5px solid var(--border);
+  background: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-tertiary);
+  color: var(--label);
   margin-bottom: 6px;
 }
 .emptyTitle {
   font-size: 14px;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--primary);
   margin: 0;
 }
 .emptySub {
   font-size: 13px;
-  color: var(--color-text-tertiary);
+  color: var(--label);
   margin: 0 0 4px;
   max-width: 280px;
   line-height: 1.6;
@@ -428,19 +428,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 14px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-text-primary);
-  background: var(--color-background-secondary);
-  border: 0.5px solid var(--color-border-secondary);
   border-radius: 7px;
   cursor: pointer;
   transition: border-color 0.12s;
 }
-.emptyBtn:hover {
-  border-color: var(--color-border-primary);
-}
-

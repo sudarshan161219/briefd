@@ -8,21 +8,16 @@ const api = axios.create({
 });
 
 // 2. Request Interceptor
-api.interceptors.request.use(
-  (config) => {
-    const adminToken = localStorage.getItem(AUTH_TOKEN_KEY);
+api.interceptors.request.use((config) => {
+  const adminToken = localStorage.getItem(AUTH_TOKEN_KEY);
 
-    if (adminToken) {
-      // Backend: "Authorization: Bearer <uuid>"
-      config.headers.Authorization = `Bearer ${adminToken}`;
-    }
+  if (adminToken) {
+    // Backend: "Authorization: Bearer <uuid>"
+    config.headers.Authorization = `Bearer ${adminToken}`;
+  }
 
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => {
@@ -31,8 +26,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       clearAuthToken();
-
-      window.location.href = "/";
     }
     return Promise.reject(error);
   },

@@ -1,14 +1,14 @@
 import { create } from "zustand";
 
 interface CLientState {
-  clientId: string;
+  clientId: string | undefined;
 
   // Actions
-  setClientId: (clientId: string) => void;
+  setClientId: (clientId: string | undefined) => void;
 }
 
 export const useClientIdStore = create<CLientState>((set) => ({
-  clientId: "",
+  clientId: undefined,
 
   setClientId: (clientId) =>
     set({

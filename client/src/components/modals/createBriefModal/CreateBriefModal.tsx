@@ -17,7 +17,7 @@ export const CreateBriefModal = () => {
 
   // Form State
   const [name, setName] = useState("");
-
+console.log(clientId);
   // Focus first input on open
   useEffect(() => {
     if (isOpen) {
@@ -52,7 +52,7 @@ export const CreateBriefModal = () => {
 
       handleClose();
       // Navigate straight to the new brief's internal page
-      // navigate(`/clients/${newBrief.clientId}`);
+      navigate(`/clients/${clientId}`);
     } catch (err) {
       console.error("Failed to create brief:", err);
     }

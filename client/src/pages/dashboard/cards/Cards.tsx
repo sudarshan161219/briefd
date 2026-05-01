@@ -4,6 +4,7 @@ import { useModalStore } from "@/store/useModalStore";
 import type { Client } from "@/hooks/client/useClient";
 import { getInitials } from "@/utils/getInitials";
 import styles from "./index.module.css";
+import { useClientIdStore } from "@/store/client/useClientIdStore";
 
 interface Props {
   clients: Client[];
@@ -11,6 +12,12 @@ interface Props {
 
 export const Cards = ({ clients }: Props) => {
   const { openModal } = useModalStore();
+  const { setClientId } = useClientIdStore();
+
+  const handleCreateBrief = (id: string) => {
+    setClientId(id);
+    openModal("CREATE_BRIEF");
+  };
 
   return (
     <div className={styles.list}>
@@ -27,7 +34,7 @@ export const Cards = ({ clients }: Props) => {
               <button
                 className={styles.rowBtn}
                 title="New brief for this client"
-                onClick={() => openModal("CREATE_BRIEF")}
+                onClick={() => handleCreateBrief(client.id)}
               >
                 <Plus size={13} />
               </button>

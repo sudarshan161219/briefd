@@ -14,7 +14,9 @@ const fetchCurrentUser = async (): Promise<AuthUserResponse> => {
     useAuthStore.getState().setUser(response.data);
     return response.data;
   } catch (error) {
-    useAuthStore.getState().setUser(null);
+    if (error.response?.status === 401) {
+      useAuthStore.getState().setUser(null);
+    }
     throw error;
   }
 };
@@ -28,5 +30,7 @@ export const useGetUser = () => {
       return failureCount < 2;
     },
     staleTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };

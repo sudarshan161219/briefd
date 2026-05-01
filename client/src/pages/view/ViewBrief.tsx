@@ -114,7 +114,13 @@ export const ViewBrief = () => {
     );
 
   if (brief?.status === "PENDING") {
-    return <SonarPing activeField={activeField} fieldLabels={fieldLabels} />;
+    return (
+      <SonarPing
+        clientId={brief.clientId}
+        activeField={activeField}
+        fieldLabels={fieldLabels}
+      />
+    );
   }
 
   return (
@@ -297,7 +303,9 @@ export const ViewBrief = () => {
                   </div>
                   <div>
                     <div className={styles.metaKey}>Company</div>
-                    <div className={styles.metaVal}>{brief.client.companyName}</div>
+                    <div className={styles.metaVal}>
+                      {brief.client.companyName}
+                    </div>
                   </div>
                 </div>
               )}

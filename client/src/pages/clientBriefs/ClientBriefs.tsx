@@ -23,31 +23,6 @@ import { useModalStore } from "@/store/useModalStore";
 import { getInitials } from "@/utils/getInitials";
 import styles from "./index.module.css";
 
-interface Brief {
-  id: string;
-  name: string;
-  slug: string;
-  status: "COMPLETED" | "PENDING";
-  createdAt: string;
-}
-
-const MOCK_BRIEFS: Brief[] = [
-  {
-    id: "1",
-    name: "E-commerce Redesign",
-    slug: "brf_abc123",
-    status: "COMPLETED",
-    createdAt: "Oct 12, 2026",
-  },
-  {
-    id: "2",
-    name: "Q4 Landing Page",
-    slug: "brf_xyz789",
-    status: "PENDING",
-    createdAt: "Oct 24, 2026",
-  },
-];
-
 // ── Main ───────────────────────────────────────────────────
 export const ClientBriefs = () => {
   const { id } = useParams();
@@ -86,7 +61,7 @@ export const ClientBriefs = () => {
   };
 
   const handleCreateBrief = () => {
-    setClientId(id ?? null);
+    setClientId(id);
     openModal("CREATE_BRIEF");
   };
 
@@ -191,12 +166,9 @@ export const ClientBriefs = () => {
             <p className={styles.emptySub}>
               Create a brief to generate a shareable link for this client.
             </p>
-            <button
-              className={styles.emptyBtn}
-              onClick={() => openModal("CREATE_BRIEF")}
-            >
+            <Button className={styles.emptyBtn} onClick={handleCreateBrief}>
               <Plus size={13} /> Create first brief
-            </button>
+            </Button>
           </div>
         ) : (
           <div className={styles.briefGrid}>

@@ -390,7 +390,7 @@ app.post("/api/brief", async (req, res) => {
         name: name.trim(),
         slug: uniqueSlug,
         userId: user.id,
-        clientId: clientId || null,
+        clientId: clientId,
         status: "PENDING",
       },
     });
