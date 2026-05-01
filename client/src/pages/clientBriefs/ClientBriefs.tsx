@@ -203,23 +203,34 @@ export const ClientBriefs = () => {
                       </span>
                     </div>
 
-                    <div className={styles.urlRow}>
-                      <div className={styles.urlBox}>
-                        <span className={styles.urlText}>{url}</span>
-                        <button
-                          className={`${styles.copyBtn} ${isCopied ? styles.copyBtnDone : ""}`}
-                          onClick={() => handleCopy(brief.slug, brief.id)}
-                          title="Copy link"
+                    <div>
+                      <span className={styles.label}>
+                        Send this link to your client to provide project
+                        details.
+                      </span>
+                      <div className={styles.urlRow}>
+                        <div className={styles.urlBox}>
+                          <span className={styles.urlText}>{url}</span>
+                          <button
+                            className={`${styles.copyBtn} ${isCopied ? styles.copyBtnDone : ""}`}
+                            onClick={() => handleCopy(brief.slug, brief.id)}
+                            title="Copy link"
+                          >
+                            {isCopied ? (
+                              <Check size={12} />
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                          </button>
+                        </div>
+
+                        <Link
+                          to={`/brief/${brief.id}/view`}
+                          className={styles.openBtn}
                         >
-                          {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                        </button>
+                          Open <ArrowRight size={12} />
+                        </Link>
                       </div>
-                      <Link
-                        to={`/brief/${brief.id}/view`}
-                        className={styles.openBtn}
-                      >
-                        Open <ArrowRight size={12} />
-                      </Link>
                     </div>
                   </div>
                 </div>

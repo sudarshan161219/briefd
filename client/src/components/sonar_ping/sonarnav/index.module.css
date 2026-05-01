@@ -1,0 +1,176 @@
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 1.5rem;
+  height: 48px;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--muted);
+  position: sticky;
+  top: 44px; /* sits just below the DashboardNavbar */
+  z-index: 30;
+}
+
+/* ── Left: breadcrumb ─────────────────────────────── */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label);
+  text-decoration: none;
+  transition: color 0.12s;
+  white-space: nowrap;
+}
+
+.backLink:hover {
+  color: var(--primary);
+}
+
+.breadcrumbSep {
+  color: var(--border);
+  font-size: 12px;
+}
+
+.breadcrumbCurrent {
+  color: var(--color-text-secondary);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Right: client link group ─────────────────────── */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Label + URL grouped together */
+.linkGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 30px;
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 7px;
+}
+
+.linkLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--label);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.liveDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #1d9e75;
+  flex-shrink: 0;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.4);
+  }
+}
+
+/* Divider between label and URL */
+.linkGroup::after {
+  content: "";
+  display: block;
+  width: 0.5px;
+  height: 14px;
+  background: var(--label);
+}
+
+.urlText {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: var(--label);
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Copy button */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 7px;
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    border-color 0.12s,
+    background 0.12s;
+  white-space: nowrap;
+}
+
+.copyBtn:hover{
+  border-color: var(--ring);
+}
+
+.copyBtnDone {
+  color: #1d9e75 !important;
+  border-color: rgba(29, 158, 117, 0.3) !important;
+  background: rgba(29, 158, 117, 0.07) !important;
+}
+
+/* Open in new tab */
+.openBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--background);
+  background: var(--primary);
+  border-radius: 7px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.openBtn:hover {
+  opacity: 0.82;
+}
+
+/* ── Responsive: hide URL text on narrow screens ── */
+@media (max-width: 600px) {
+  .linkGroup {
+    display: none;
+  }
+  .breadcrumbCurrent {
+    display: none;
+  }
+}

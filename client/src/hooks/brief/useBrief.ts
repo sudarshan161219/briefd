@@ -10,6 +10,7 @@ export interface Brief {
   slug: string;
   name: string;
   createdAt: string;
+  updatedAt: string;
   status: "PENDING" | "COMPLETED";
 
   // Scoping Fields

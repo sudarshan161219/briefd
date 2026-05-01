@@ -1,10 +1,12 @@
 import { type FC } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { SonarNav } from "./sonarnav/SonarNav";
 import styles from "./index.module.css";
 
 interface SonarPingProps {
-  clientId: string;
+  clientId: string | null;
   activeField: string | null;
   fieldLabels: Record<string, string>;
 }
@@ -18,11 +20,15 @@ export const SonarPing: FC<SonarPingProps> = ({
 
   return (
     <div className={styles.panel} id="panel-e">
-      <div className={styles.navBar}>
+      <SonarNav clientId={clientId} />
+
+      {/* <div className={styles.navBar}>
         <Link to={`/clients/${clientId}`} className={styles.backLink}>
           <ArrowLeft size={13} /> Briefs
         </Link>
-      </div>
+
+        <Button>client view</Button>
+      </div> */}
 
       <div className={styles.stage}>
         <div className={styles.radarwrap}>
