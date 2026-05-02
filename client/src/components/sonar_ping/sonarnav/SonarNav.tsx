@@ -37,9 +37,22 @@ export const SonarNav = ({ clientId, projectName }: SonarNavProps) => {
         )}
       </Link>
 
+      {/* Center: client view link */}
+      <div className={styles.linkGroup}>
+        <div className={styles.linkLabel}>
+          <span className={styles.liveDot} />
+          Client link
+        </div>
+        <div className={styles.urlChip}>
+          <span className={styles.urlText}>{clientUrl}</span>
+        </div>
+
+        <div className={styles.vertical}></div>
+      </div>
+
       {/* Right: client view link */}
       <div className={styles.right}>
-        <div className={styles.linkGroup}>
+        {/* <div className={styles.linkGroup}>
           <div className={styles.linkLabel}>
             <span className={styles.liveDot} />
             Client link
@@ -47,7 +60,7 @@ export const SonarNav = ({ clientId, projectName }: SonarNavProps) => {
           <div className={styles.urlChip}>
             <span className={styles.urlText}>{clientUrl}</span>
           </div>
-        </div>
+        </div> */}
 
         <Button
           variant="ghost"

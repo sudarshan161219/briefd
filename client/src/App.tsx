@@ -19,7 +19,7 @@ export const App = () => {
       <ModalManager />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/brief/:id" element={<ClientForm />} />
+        <Route path="/b/:id" element={<ClientForm />} />
         <Route element={<ProtectedRoutes />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clients/:id" element={<ClientBriefs />} />

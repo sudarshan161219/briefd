@@ -75,7 +75,7 @@ export const ClientForm = () => {
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:8080/api/briefs/${id}`, {
+      const response = await fetch(`http://localhost:8080/api/brief/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

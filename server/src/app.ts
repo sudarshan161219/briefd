@@ -481,17 +481,51 @@ app.get("/api/brief/:id", async (req, res) => {
 // 3. Client submits the brief
 app.put("/api/brief/:id", async (req, res) => {
   try {
+    const {
+      projectName,
+      primaryGoal,
+      needBuilt,
+      targetAudience,
+      keyFeatures,
+      avoid,
+      budgetRange,
+      deadline,
+      assetsUrls,
+      references,
+      additionalInfo,
+    } = req.body;
     const updatedBrief = await prisma.brief.update({
       where: { id: req.params.id },
-      data: { ...req.body, status: "SUBMITTED" },
+      data: {
+        projectName,
+        primaryGoal,
+        needBuilt,
+        targetAudience,
+        keyFeatures,
+        avoid,
+        deadline: deadline ? new Date(deadline) : null,
+        budgetRange,
+        assetsUrls,
+        references,
+        additionalInfo,
+        status: "SUBMITTED",
+      },
     });
 
-    // Emit real-time event to the specific freelancer viewing this brief
-    io.emit(`brief-updated-${req.params.id}`, updatedBrief);
+    if (typeof io !== "undefined") {
+      io.emit(`brief-updated-${req.params.id}`, updatedBrief);
+    } else {
+      console.warn("Socket 'io' is not defined in this route!");
+    }
 
     res.json(updatedBrief);
   } catch (error) {
-    res.status(500).json({ error: "Failed to submit brief" });
+    console.error("🚨 [PUT /api/brief/:id] Crash:", error);
+
+    res.status(500).json({
+      error: "Failed to submit brief",
+      details: error.message,
+    });
   }
 });
 
