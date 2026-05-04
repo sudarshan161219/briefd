@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
 import { Sun, Moon } from "lucide-react";
 import { useThemeStore } from "@/store/theme/useThemeStore";
 import { DrawnCheck } from "@/components/brief_submitted/DrawnCheck";
 import styles from "./index.module.css";
+import { socket } from "@/lib/socket/socket";
 import { Button } from "@/components/ui/button";
 
 export const ClientForm = () => {
@@ -13,7 +13,6 @@ export const ClientForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(() => {
     return localStorage.getItem(`brief-submitted-${id}`) === "true";
   });
-  const socketRef = useRef<any>(null);
 
   const [formData, setFormData] = useState(() => {
     const savedDraft = localStorage.getItem(`brief-draft-${id}`);
@@ -42,27 +41,32 @@ export const ClientForm = () => {
     };
   });
 
-  // 1. Establish WebSocket Connection
-  useEffect(() => {
-    const newSocket = io("http://localhost:8080");
-    socketRef.current = newSocket;
-    return () => {
-      newSocket.disconnect();
-    };
-  }, []);
+  const { projectName, budgetRange } = formData;
 
   // 2. Draft Auto-saving
   useEffect(() => {
     localStorage.setItem(`brief-draft-${id}`, JSON.stringify(formData));
   }, [formData, id]);
 
+  useEffect(() => {
+    const joinBrief = () => {
+      if (id) socket.emit("join-brief", id);
+    };
+
+    if (socket.connected) joinBrief();
+    socket.on("connect", joinBrief);
+
+    return () => {
+      socket.off("connect", joinBrief);
+    };
+  }, [id]);
+
   // 3. Helper to emit typing activity (working)
   const handleActivity = (fieldName: string, isTyping: boolean) => {
     console.log(`1. Form Action: Field '${fieldName}' isTyping: ${isTyping}`);
 
-    if (socketRef.current) {
-      console.log(`2. Emitting to server for brief ID: ${id}`);
-      socketRef.current.emit("field-focus", {
+    if (socket.connected) {
+      socket.emit("field-focus", {
         briefId: id,
         fieldName,
         isTyping,
@@ -74,6 +78,8 @@ export const ClientForm = () => {
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const submittedAt = new Date().toISOString();
     try {
       const response = await fetch(`http://localhost:8080/api/brief/${id}`, {
         method: "PUT",
@@ -91,6 +97,14 @@ export const ClientForm = () => {
       if (response.ok) {
         localStorage.setItem(`brief-submitted-${id}`, "true");
         localStorage.removeItem(`brief-draft-${id}`);
+
+        const infoSummary = {
+          projectName,
+          budgetRange,
+          sent: submittedAt,
+        };
+
+        localStorage.setItem(`brief-info-${id}`, JSON.stringify(infoSummary));
         setIsSubmitted(true);
       } else {
         console.error("Failed to submit brief");

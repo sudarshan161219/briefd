@@ -1,7 +1,4 @@
 import { type FC } from "react";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { SonarNav } from "./sonarnav/SonarNav";
 import styles from "./index.module.css";
 
@@ -17,6 +14,7 @@ export const SonarPing: FC<SonarPingProps> = ({
   fieldLabels,
 }) => {
   const currentLabel = activeField ? fieldLabels[activeField] : null;
+
 
   return (
     <div className={styles.panel} id="panel-e">

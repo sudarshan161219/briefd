@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { io } from "socket.io-client";
+import { socket } from "@/lib/socket/socket";
 import { Clock, ArrowLeft } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -37,33 +37,32 @@ export const ViewBrief = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const socket = io("http://localhost:8080");
+    if (!id) return;
 
-    socket.on("connect", () => {
-      console.log(`🔌 Dashboard connected to socket with ID: ${socket.id}`);
-    });
+    const joinBrief = () => {
+      socket.emit("join-brief", id);
+    };
 
+    // Join immediately if already connected, or on (re)connect
+    if (socket.connected) joinBrief();
+    socket.on("connect", joinBrief);
+
+    // Listen for brief submission
     socket.on(`brief-updated-${id}`, () => {
+      console.log("5. Brief updated event received — refetching");
       queryClient.invalidateQueries({ queryKey: ["brief", id] });
     });
 
-    // Add logs here!
+    // Listen for client field activity
     const activityEvent = `client-activity-${id}`;
-    console.log(`Listening for real-time activity on: ${activityEvent}`);
-
     socket.on(activityEvent, ({ fieldName, isTyping }) => {
-      console.log(
-        `5. Dashboard Received! Field: ${fieldName}, isTyping: ${isTyping}`,
-      );
-      if (isTyping) {
-        setActiveField(fieldName);
-      } else {
-        setActiveField(null);
-      }
+      setActiveField(isTyping ? fieldName : null);
     });
 
     return () => {
-      socket.disconnect();
+      socket.off("connect", joinBrief);
+      socket.off(`brief-updated-${id}`);
+      socket.off(activityEvent);
     };
   }, [id, queryClient]);
 

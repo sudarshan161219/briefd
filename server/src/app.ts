@@ -20,24 +20,30 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 app.use(express.json());
+app.set("io", io);
 
 io.on("connection", (socket) => {
   console.log(`🟢 New client connected: ${socket.id}`);
 
-  socket.on("field-focus", ({ briefId, fieldName, isTyping }) => {
-    console.log(
-      `3. Server Received: Client typing in '${fieldName}' for brief '${briefId}'`,
-    );
+  socket.on("join-brief", (briefId) => {
+    socket.join(`brief-${briefId}`);
+    console.log(`Client ${socket.id} joined room: brief-${briefId}`);
+  });
 
-    // Broadcast it out
+  socket.on("field-focus", ({ briefId, fieldName, isTyping }) => {
     const eventName = `client-activity-${briefId}`;
-    socket.broadcast.emit(eventName, { fieldName, isTyping });
-    console.log(`4. Server Broadcasted out on channel: ${eventName}`);
+    socket.to(`brief-${briefId}`).emit(eventName, { fieldName, isTyping });
+    console.log(`Server broadcast on: ${eventName}`);
   });
 
   socket.on("disconnect", () => {
     console.log(`🔴 Client disconnected: ${socket.id}`);
   });
+});
+
+let globalBrowser;
+puppeteer.launch({ headless: true, args: ["--no-sandbox"] }).then((b) => {
+  globalBrowser = b;
 });
 
 app.get("/", async (req, res) => {
@@ -168,7 +174,10 @@ app.post("/api/client", async (req, res) => {
     });
 
     res.status(201).json(client);
-  } catch (error) {}
+  } catch (error) {
+    console.error("[Create Client Error]:", error);
+    res.status(500).json({ error: "Failed to create client." });
+  }
 });
 
 // get all clients by user(adminToken)
@@ -426,14 +435,14 @@ app.get("/api/brief", async (req, res) => {
 
     const { clientId } = req.query;
 
+    const whereClause: any = { userId: user.id };
+    if (clientId) {
+      whereClause.clientId = String(clientId);
+    }
+
     const briefs = await prisma.brief.findMany({
-      where: {
-        userId: user.id,
-        clientId: String(clientId),
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
     });
 
     res.status(200).json(briefs);
@@ -512,8 +521,13 @@ app.put("/api/brief/:id", async (req, res) => {
       },
     });
 
-    if (typeof io !== "undefined") {
-      io.emit(`brief-updated-${req.params.id}`, updatedBrief);
+    const io = req.app.get("io");
+
+    if (io) {
+      io.to(`brief-${req.params.id}`).emit(
+        `brief-updated-${req.params.id}`,
+        updatedBrief,
+      );
     } else {
       console.warn("Socket 'io' is not defined in this route!");
     }
@@ -637,6 +651,9 @@ app.get("/api/brief/:id/download", async (req, res) => {
 
     // ── PDF ──────────────────────────────────
     if (format === "pdf") {
+      if (!globalBrowser) return res.status(500).send("PDF engine not ready");
+      const page = await globalBrowser.newPage();
+
       const html = buildHtml(brief, id);
 
       const browser = await puppeteer.launch({
@@ -647,8 +664,6 @@ app.get("/api/brief/:id/download", async (req, res) => {
       });
 
       try {
-        const page = await browser.newPage();
-
         // Set HTML directly — no network round-trip needed
         await page.setContent(html, { waitUntil: "networkidle0" });
 
@@ -671,8 +686,7 @@ app.get("/api/brief/:id/download", async (req, res) => {
         res.setHeader("Content-Length", pdfBuffer.length);
         return res.send(pdfBuffer);
       } finally {
-        // Always close the browser, even if pdf() throws
-        await browser.close();
+        await page.close();
       }
     }
 

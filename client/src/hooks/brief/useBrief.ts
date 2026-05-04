@@ -143,7 +143,7 @@ export const useBriefs = (clientId?: string) => {
 
 export const useBrief = (id: string | undefined) => {
   return useQuery({
-    queryKey: ["breif", id],
+    queryKey: ["brief", id],
     queryFn: () => fetchBrief(id!),
     enabled: !!id,
   });
@@ -159,8 +159,8 @@ export const usePublicBrief = (slug: string | undefined) => {
   return useQuery({
     queryKey: ["public-brief", slug],
     queryFn: () => fetchPublicBrief(slug!),
-    enabled: !!slug, // Only run the query if a slug is actually present in the URL
-    retry: false, // If it 404s, don't keep retrying (prevents spamming if the link is dead)
+    enabled: !!slug,
+    retry: false,
   });
 };
 
@@ -170,7 +170,6 @@ export const useSubmitPublicBrief = () => {
   return useMutation({
     mutationFn: submitPublicBrief,
     onSuccess: (updatedBrief) => {
-      // Instantly update the public cache so the UI reflects the "COMPLETED" status
       queryClient.setQueryData(
         ["public-brief", updatedBrief.slug],
         updatedBrief,
