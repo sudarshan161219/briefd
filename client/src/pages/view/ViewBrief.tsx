@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { Clock, Sun, Moon, Coffee } from "lucide-react";
+import { Clock, ArrowLeft } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { SonarPing } from "@/components/sonar_ping/SonarPing";
 import { useModalStore } from "@/store/useModalStore";
 import { useQueryClient } from "@tanstack/react-query";
-import { useThemeStore } from "@/store/theme/useThemeStore";
+import { useBriefStore } from "@/store/brief/useBriefStore";
 import { useBrief } from "@/hooks/brief/useBrief";
 import styles from "./index.module.css";
 
@@ -31,8 +31,8 @@ const fieldLabels: Record<string, string> = {
 export const ViewBrief = () => {
   const { id } = useParams();
   const { data: brief, isLoading } = useBrief(id);
-  const { theme, toggleTheme } = useThemeStore();
   const { openModal } = useModalStore();
+  const { setBriefInfo } = useBriefStore();
   const [activeField, setActiveField] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -123,44 +123,79 @@ export const ViewBrief = () => {
     );
   }
 
+  const handleDownload = () => {
+    openModal("DOWNLOAD");
+    setBriefInfo(brief.id, brief.projectName);
+  };
+
   return (
     <div className={styles.container}>
-      <h2 className={styles.srOnly}>
-        Brief dashboard for {brief?.projectName || "Project"}
-      </h2>
+      <Link to={`/clients/${brief.clientId}`} className={styles.backLink}>
+        <ArrowLeft size={13} />
+        Briefs
+      </Link>
 
-      <div className={styles.topbar}>
+      <h1 className={styles.srOnly}>
+        Brief dashboard for {brief?.projectName || "Project"}
+      </h1>
+
+      <div className={styles.topbar} component="header">
         <div>
-          <p className={styles.breadcrumb}>Briefd &rsaquo; Briefs</p>
-          <h1 className={styles.title}>{brief.projectName || "Project"}</h1>
+          <nav aria-label="Breadcrumb" className={styles.breadcrumbNav}>
+            <ol className={styles.breadcrumbList}>
+              <li>
+                <Link to={`/clients/${brief.clientId}`}>Briefs</Link>
+                <span aria-hidden="true" className={styles.separator}>
+                  &rsaquo;
+                </span>
+              </li>
+              <li>
+                <span aria-current="page" className={styles.breadcrumbCurrent}>
+                  Briefd
+                </span>
+              </li>
+            </ol>
+          </nav>
+
+          <h2 className={styles.title}>{brief.projectName || "Project"}</h2>
+
           <p className={styles.subtitle}>
             Submitted{" "}
-            {brief.updatedAt
-              ? format(new Date(brief.updatedAt), "MMMM d, yyyy 'at' h:mm a")
-              : "recently"}
+            <time dateTime={brief.updatedAt}>
+              {brief.updatedAt
+                ? format(new Date(brief.updatedAt), "MMMM d, yyyy 'at' h:mm a")
+                : "recently"}
+            </time>
           </p>
         </div>
+
         <div className={styles.actions}>
-          <div className={styles.pill}>
-            <div className={styles.pillDot}></div>Submitted
+          {/* 2. Use a status role for the pill so screen readers announce state changes */}
+          <div
+            className={styles.pill}
+            role="status"
+            aria-label="Status: Submitted"
+          >
+            <div className={styles.pillDot} aria-hidden="true"></div>
+            Submitted
           </div>
 
-          <Button
-            onClick={() => openModal("DOWNLOAD")}
-            size="sm"
-            className={styles.btn}
-          >
+          <Button onClick={handleDownload} size="sm" className={styles.btn}>
             <svg
               width="13"
               height="13"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.5"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              focusable="false"
             >
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <polyline points="16 6 12 2 8 6" />
-              <line x1="12" y1="2" x2="12" y2="15" />
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             Save a copy
           </Button>

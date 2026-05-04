@@ -22,14 +22,6 @@ export const SonarPing: FC<SonarPingProps> = ({
     <div className={styles.panel} id="panel-e">
       <SonarNav clientId={clientId} />
 
-      {/* <div className={styles.navBar}>
-        <Link to={`/clients/${clientId}`} className={styles.backLink}>
-          <ArrowLeft size={13} /> Briefs
-        </Link>
-
-        <Button>client view</Button>
-      </div> */}
-
       <div className={styles.stage}>
         <div className={styles.radarwrap}>
           <div className={styles.radarring}></div>

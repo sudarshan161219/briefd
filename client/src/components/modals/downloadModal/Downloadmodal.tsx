@@ -2,14 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useModalStore } from "@/store/useModalStore";
 import { Button } from "@/components/ui/button";
 import styles from "./index.module.css";
+import { useBriefStore } from "@/store/brief/useBriefStore";
 
 // ─── Types ───────────────────────────────────────────────────
 type Format = "pdf" | "doc" | "txt";
-
-interface DownloadModalProps {
-  briefId: string;
-  projectName?: string;
-}
 
 // ─── Format definitions ───────────────────────────────────────
 const FORMATS: {
@@ -84,8 +80,9 @@ const FORMATS: {
 ];
 
 // ─── Component ────────────────────────────────────────────────
-export const DownloadModal = ({ briefId, projectName }: DownloadModalProps) => {
+export const DownloadModal = () => {
   const { isOpen, closeModal } = useModalStore();
+  const { briefId, projectName } = useBriefStore();
   const [selected, setSelected] = useState<Format>("pdf");
   const [downloading, setDownloading] = useState(false);
   const [done, setDone] = useState(false);
@@ -115,7 +112,7 @@ export const DownloadModal = ({ briefId, projectName }: DownloadModalProps) => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/briefs/${briefId}/download?format=${selected}`,
+        `http://localhost:8080/api/brief/${briefId}/download?format=${selected}`,
       );
       if (!res.ok) throw new Error("Download failed");
 
@@ -202,7 +199,11 @@ export const DownloadModal = ({ briefId, projectName }: DownloadModalProps) => {
 
         {/* Footer */}
         <div className={styles.footer}>
-          <Button variant="ghost" className={styles.cancelBtn} onClick={closeModal}>
+          <Button
+            variant="ghost"
+            className={styles.cancelBtn}
+            onClick={closeModal}
+          >
             Cancel
           </Button>
           <Button

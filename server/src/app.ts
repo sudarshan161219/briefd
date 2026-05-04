@@ -508,7 +508,7 @@ app.put("/api/brief/:id", async (req, res) => {
         assetsUrls,
         references,
         additionalInfo,
-        status: "SUBMITTED",
+        status: "COMPLETED",
       },
     });
 
