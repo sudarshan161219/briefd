@@ -24,7 +24,7 @@ model User {
 model Client {
   id          String   @id @default(uuid())
   name        String
-  email       String   
+  email       String   @unique
   companyName String?
 
   // A client belongs to a specific freelancer (User)
@@ -33,9 +33,6 @@ model Client {
 
   // A client can have many briefs over time (repeat business)
   briefs      Brief[]
-
-  // Ensure a freelancer doesn't have duplicate clients with the same email
-  @@unique([userId, email])
 }
 
 

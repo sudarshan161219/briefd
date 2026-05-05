@@ -1,14 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Coffee, Sun, Moon, LogOut, Settings } from "lucide-react";
+import { Coffee, Sun, Moon, LogOut } from "lucide-react";
 import { useThemeStore } from "@/store/theme/useThemeStore";
-import { useModalStore } from "@/store/useModalStore";
 import { useAuthStore } from "@/store/user/useAuthStore";
 import styles from "./index.module.css";
 
 export const DashboardNavbar = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { openModal } = useModalStore();
   const { theme, toggleTheme } = useThemeStore();
 
   const handleDisconnect = () => {
@@ -78,15 +76,7 @@ export const DashboardNavbar = () => {
             {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
 
-          {/* Settings */}
-          <button
-            onClick={() => openModal("SETTINGS")}
-            className={styles.iconBtn}
-            title="Workspace settings"
-            aria-label="Settings"
-          >
-            <Settings size={14} />
-          </button>
+          {/* Settings - in future*/}
 
           <span className={styles.rule} aria-hidden="true" />
 

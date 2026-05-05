@@ -65,7 +65,7 @@ export const ViewBrief = () => {
       socket.off(`brief-updated-${brief?.slug}`);
       socket.off(activityEvent);
     };
-  }, [brief?.slug, queryClient]);
+  }, [brief?.slug, id, queryClient]);
 
   // Helpers for dynamic data formatting
   const getInitials = (name: string) => {
@@ -126,7 +126,7 @@ export const ViewBrief = () => {
 
   const handleDownload = () => {
     openModal("DOWNLOAD");
-    setBriefInfo(brief.id, brief?.projectName);
+    setBriefInfo(brief?.slug, brief?.projectName);
   };
 
   return (

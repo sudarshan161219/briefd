@@ -8,7 +8,7 @@
 }
 
 .panel {
-  height: 100vh;
+  padding: 1rem;
 }
 
 .stage {
@@ -17,8 +17,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 360px;
-  padding: 3rem 2rem;
   text-align: center;
 }
 
@@ -49,8 +47,11 @@
   line-height: 1.7;
 }
 .receipt {
+  width: 100%;
   display: flex;
-  gap: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
   margin-top: 24px;
   opacity: 0;
   animation: fade-up 0.5s ease 1.4s forwards;
@@ -59,11 +60,12 @@
   overflow: hidden;
 }
 .cell {
-  padding: 12px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  border-right: 0.5px solid var(--border);
+  padding: 1rem;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
 }
 .cell:last-child {
   border-right: none;
@@ -144,5 +146,39 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@media (min-width: 600px) {
+  .receipt {
+    width: 500px;
+  }
+}
+
+@media (min-width: 768px) {
+  .stage {
+    padding: 3rem 2rem;
+  }
+
+  .receipt {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+    opacity: 0;
+    animation: fade-up 0.5s ease 1.4s forwards;
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .cell {
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-right: 0.5px solid var(--border);
   }
 }

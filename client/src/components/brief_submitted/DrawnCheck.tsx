@@ -4,9 +4,13 @@ import { Button } from "@/components/ui/button";
 import styles from "./index.module.css";
 import { useDownloadDocumentStore } from "@/store/DownloadDocumentStore/useDownloadDocumentStore";
 import { usePublicBrief } from "@/hooks/brief/useBrief";
+import { useModalStore } from "@/store/useModalStore";
+import { useBriefStore } from "@/store/brief/useBriefStore";
 
 export const DrawnCheck = () => {
   const { id } = useParams();
+  const { openModal } = useModalStore();
+  const { setBriefInfo } = useBriefStore();
   const { data: brief, isLoading } = usePublicBrief(id);
   const { open } = useDownloadDocumentStore();
   const [confettiPieces, setConfettiPieces] = useState(() => {
@@ -59,6 +63,11 @@ export const DrawnCheck = () => {
       day: "numeric",
       month: "short",
     });
+  };
+
+  const handleDownload = () => {
+    openModal("DOWNLOAD");
+    setBriefInfo(id, brief?.projectName);
   };
 
   return (
@@ -143,7 +152,7 @@ export const DrawnCheck = () => {
           </div>
         </div>
 
-        <Button onClick={open} className={styles.cta}>
+        <Button onClick={handleDownload} className={styles.cta}>
           <svg
             width="13"
             height="13"

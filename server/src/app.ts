@@ -5,11 +5,10 @@ import { Server } from "socket.io";
 import { prisma } from "./utils/prismaClient.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { fmt } from "./helpers/esc.js";
-import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { generateSlug } from "./helpers/generateSlug.js";
 import { buildHtml } from "./helpers/buildHtml.js";
-import puppeteer from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 import { getAuthToken } from "./lib/getAuthToken.js";
 
 const app = express();
@@ -17,6 +16,8 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: "http://localhost:5173", methods: ["GET", "POST", "PUT"] },
 });
+
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -41,10 +42,13 @@ io.on("connection", (socket) => {
   });
 });
 
-let globalBrowser;
-puppeteer.launch({ headless: true, args: ["--no-sandbox"] }).then((b) => {
-  globalBrowser = b;
-});
+let globalBrowser: Browser | undefined;
+async function initBrowser() {
+  globalBrowser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+}
 
 app.get("/", async (req, res) => {
   const sunArt = `
@@ -147,21 +151,34 @@ app.post("/api/client", async (req, res) => {
     if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
 
     // client creation limitation
-    const MAX_CLIENTS = 5;
-    const clientCount = await prisma.client.count({
-      where: { userId: adminToken },
-    });
+    //  const MAX_CLIENTS = 5;
+    //   const clientCount = await prisma.client.count({
+    //     where: { userId: adminToken },
+    //   });
 
-    if (clientCount >= MAX_CLIENTS) {
-      return res.status(403).json({
-        error: `limit reached: You can only have up to ${MAX_CLIENTS} clients.`,
-      });
-    }
+    //   if (clientCount >= MAX_CLIENTS) {
+    //     return res.status(403).json({
+    //       error: `limit reached: You can only have up to ${MAX_CLIENTS} clients.`,
+    //     });
+    //   }
 
     const { name, email, companyName } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ error: "Name and email are required." });
+    }
+
+    const existingUser = await prisma.client.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new AppError({
+        message: "Email already in use.",
+        statusCode: StatusCodes.CONFLICT,
+        code: "EMAIL_CONFLICT",
+        debugMessage: `Attempted to register with existing email: ${email}`,
+      });
     }
 
     const client = await prisma.client.create({
@@ -352,16 +369,16 @@ app.post("/api/brief", async (req, res) => {
     }
 
     // brief creation limitation
-    const MAX_BRIEFS = 5;
-    const briefCount = await prisma.brief.count({
-      where: { userId: user.id },
-    });
+    // const MAX_BRIEFS = 5;
+    // const briefCount = await prisma.brief.count({
+    //   where: { userId: user.id },
+    // });
 
-    if (briefCount >= MAX_BRIEFS) {
-      return res.status(403).json({
-        error: `Showcase limit reached: You can only create up to ${MAX_BRIEFS} briefs.`,
-      });
-    }
+    // if (briefCount >= MAX_BRIEFS) {
+    //   return res.status(403).json({
+    //     error: `Showcase limit reached: You can only create up to ${MAX_BRIEFS} briefs.`,
+    //   });
+    // }
 
     const { name, clientId } = req.body;
 
@@ -584,9 +601,9 @@ app.get("/api/public/brief/:id", async (req, res) => {
 app.get("/api/brief/:id/download", async (req, res) => {
   try {
     const { id } = req.params;
-    const format = req.query.format as string; // 'txt' | 'doc' | 'pdf'
+    const format = req.query.format as string;
 
-    const brief = await prisma.brief.findUnique({ where: { id } });
+    const brief = await prisma.brief.findUnique({ where: { slug: id } });
     if (!brief) return res.status(404).json({ error: "Brief not found" });
 
     const safeProjectName =
@@ -689,18 +706,13 @@ app.get("/api/brief/:id/download", async (req, res) => {
     // ── PDF ──────────────────────────────────
     if (format === "pdf") {
       if (!globalBrowser) return res.status(500).send("PDF engine not ready");
-      const page = await globalBrowser.newPage();
 
-      const html = buildHtml(brief, id);
-
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        // For Docker / production, point to your installed Chromium:
-        // executablePath: "/usr/bin/chromium-browser",
-      });
+      let page;
 
       try {
+        page = await globalBrowser.newPage();
+        const html = buildHtml(brief, id);
+
         // Set HTML directly — no network round-trip needed
         await page.setContent(html, { waitUntil: "networkidle0" });
 
@@ -712,7 +724,7 @@ app.get("/api/brief/:id/download", async (req, res) => {
             left: "2.8cm",
             right: "2.8cm",
           },
-          printBackground: true, // renders background colours (grey meta cards etc.)
+          printBackground: true,
         });
 
         res.setHeader(
@@ -722,6 +734,11 @@ app.get("/api/brief/:id/download", async (req, res) => {
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Length", pdfBuffer.length);
         return res.send(pdfBuffer);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        return res
+          .status(500)
+          .send("An error occurred while generating the PDF.");
       } finally {
         await page.close();
       }
@@ -736,5 +753,19 @@ app.get("/api/brief/:id/download", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+async function startServer() {
+  try {
+    // Start the browser
+    await initBrowser();
+
+    // Start listening
+    httpServer.listen(PORT, () =>
+      console.log(`Server running on port ${PORT}`),
+    );
+  } catch (error) {
+    console.error("❌ Failed to initialize PDF engine. Shutting down.", error);
+    process.exit(1);
+  }
+}
+
+startServer();
