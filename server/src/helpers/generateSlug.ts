@@ -2,7 +2,10 @@ import slugify from "slugify";
 import { nanoid } from "nanoid";
 
 export const generateSlug = (name: string) => {
-  const baseSlug = slugify.default(name, { lower: true, strict: true });
+  let baseSlug = slugify.default(name, { lower: true, strict: true });
+  if (!baseSlug) {
+    baseSlug = "brief";
+  }
   const suffix = nanoid(5);
   const slug = `${baseSlug}-${suffix}`;
   return slug;

@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import styles from "./index.module.css";
 import { useDownloadDocumentStore } from "@/store/DownloadDocumentStore/useDownloadDocumentStore";
+import { usePublicBrief } from "@/hooks/brief/useBrief";
 
 export const DrawnCheck = () => {
+  const { id } = useParams();
+  const { data: brief, isLoading } = usePublicBrief(id);
   const { open } = useDownloadDocumentStore();
   const [confettiPieces, setConfettiPieces] = useState(() => {
     const colors = [
@@ -36,6 +40,26 @@ export const DrawnCheck = () => {
       return () => clearTimeout(timer);
     }
   }, [confettiPieces]);
+
+  const getRelativeTime = (isoString: string): string => {
+    const diff = Math.floor(
+      (Date.now() - new Date(isoString).getTime()) / 1000,
+    );
+
+    if (diff < 10) return "Just now";
+    if (diff < 60) return `${diff}s ago`;
+
+    const mins = Math.floor(diff / 60);
+    if (mins < 60) return `${mins}m ago`;
+
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+
+    return new Date(isoString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  };
 
   return (
     <div className={styles.panel} id="panel-a">
@@ -91,15 +115,31 @@ export const DrawnCheck = () => {
         <div className={styles.receipt}>
           <div className={styles.cell}>
             <span className={styles.celllabel}>Project</span>
-            <span className={styles.cellval}>Portal Redesign</span>
+            <span className={styles.cellval}>{brief?.projectName}</span>
           </div>
           <div className={styles.cell}>
             <span className={styles.celllabel}>Budget</span>
-            <span className={styles.cellval}>$2k–$5k</span>
+            <span className={styles.cellval}>{brief?.budgetRange}</span>
           </div>
+
+          {brief?.deadline && (
+            <div className={styles.cell}>
+              <span className={styles.celllabel}>Deadline</span>
+              <span className={styles.cellval}>
+                {new Date(brief?.deadline).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
+            </div>
+          )}
+
           <div className={styles.cell}>
             <span className={styles.celllabel}>Sent</span>
-            <span className={styles.cellval}>Just now</span>
+            <span className={styles.cellval}>
+              {brief?.updatedAt ? getRelativeTime(brief.updatedAt) : "—"}
+            </span>
           </div>
         </div>
 

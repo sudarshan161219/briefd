@@ -63,6 +63,26 @@ export interface UpdatePublicBriefPayload {
   additionalInfo?: string;
 }
 
+export interface SubmitBriefPayload {
+  slug: string;
+  data: {
+    clientName?: string;
+    clientEmail?: string;
+    companyName?: string;
+    projectName: string;
+    primaryGoal: string;
+    needBuilt: string;
+    targetAudience?: string;
+    keyFeatures?: string;
+    avoid?: string;
+    budgetRange: string;
+    deadline?: string | null;
+    assetsUrls?: string;
+    references?: string;
+    additionalInfo?: string;
+  };
+}
+
 // ==========================================
 // 2. API FUNCTIONS
 // ==========================================
@@ -88,22 +108,17 @@ const fetchBrief = async (id: string): Promise<Brief> => {
 };
 
 // Public: Fetch a brief by its slug (No auth required)
-const fetchPublicBrief = async (slug: string): Promise<Brief> => {
-  const response = await api.get<Brief>(`/public/brief/${slug}`);
+const fetchPublicBrief = async (id: string): Promise<Brief> => {
+  const response = await api.get<Brief>(`/public/brief/${id}`);
+  return response.data;
+};
+
+const submitBrief = async ({ slug, data }: SubmitBriefPayload) => {
+  const response = await api.put(`/brief/${slug}`, data);
   return response.data;
 };
 
 // Public: Submit the form fields to complete the brief
-const submitPublicBrief = async ({
-  slug,
-  data,
-}: {
-  slug: string;
-  data: UpdatePublicBriefPayload;
-}): Promise<Brief> => {
-  const response = await api.patch<Brief>(`/public/brief/${slug}`, data);
-  return response.data;
-};
 
 // ==========================================
 // 3. REACT QUERY HOOKS
@@ -155,11 +170,11 @@ export const useBrief = (id: string | undefined) => {
  * ------------------------------------------
  */
 
-export const usePublicBrief = (slug: string | undefined) => {
+export const usePublicBrief = (id: string | undefined) => {
   return useQuery({
-    queryKey: ["public-brief", slug],
-    queryFn: () => fetchPublicBrief(slug!),
-    enabled: !!slug,
+    queryKey: ["brief", id],
+    queryFn: () => fetchPublicBrief(id!),
+    enabled: !!id,
     retry: false,
   });
 };
@@ -168,12 +183,14 @@ export const useSubmitPublicBrief = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: submitPublicBrief,
-    onSuccess: (updatedBrief) => {
-      queryClient.setQueryData(
-        ["public-brief", updatedBrief.slug],
-        updatedBrief,
-      );
+    mutationFn: submitBrief,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["brief", variables.slug],
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to submit brief:", error);
     },
   });
 };

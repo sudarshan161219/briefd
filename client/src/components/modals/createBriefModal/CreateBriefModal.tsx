@@ -17,7 +17,7 @@ export const CreateBriefModal = () => {
 
   // Form State
   const [name, setName] = useState("");
-console.log(clientId);
+
   // Focus first input on open
   useEffect(() => {
     if (isOpen) {
@@ -45,7 +45,7 @@ console.log(clientId);
     e.preventDefault();
 
     try {
-     await createBrief({
+      await createBrief({
         name: name.trim(),
         clientId: clientId,
       });

@@ -452,7 +452,7 @@ app.get("/api/brief", async (req, res) => {
   }
 });
 
-//  Fetch brief (for client form or freelancer view)
+//  Fetch brief (user with admin token)
 app.get("/api/brief/:id", async (req, res) => {
   try {
     const adminToken = getAuthToken(req);
@@ -487,7 +487,7 @@ app.get("/api/brief/:id", async (req, res) => {
   }
 });
 
-// 3. Client submits the brief
+// Client submits the brief
 app.put("/api/brief/:id", async (req, res) => {
   try {
     const {
@@ -504,7 +504,7 @@ app.put("/api/brief/:id", async (req, res) => {
       additionalInfo,
     } = req.body;
     const updatedBrief = await prisma.brief.update({
-      where: { id: req.params.id },
+      where: { slug: req.params.id },
       data: {
         projectName,
         primaryGoal,
@@ -540,6 +540,43 @@ app.put("/api/brief/:id", async (req, res) => {
       error: "Failed to submit brief",
       details: error.message,
     });
+  }
+});
+
+app.get("/api/public/brief/:id", async (req, res) => {
+  try {
+    const brief = await prisma.brief.findUnique({
+      where: {
+        slug: req.params.id,
+      },
+
+      select: {
+        id: true,
+        projectName: true,
+        budgetRange: true,
+        updatedAt: true,
+        status: true,
+        deadline: true,
+        client: {
+          select: {
+            name: true,
+            companyName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!brief) {
+      return res
+        .status(404)
+        .json({ error: "Brief not found or link is invalid." });
+    }
+
+    res.status(200).json(brief);
+  } catch (error) {
+    console.error("[Fetch Public Brief Error]:", error);
+    res.status(500).json({ error: "Failed to load the brief." });
   }
 });
 

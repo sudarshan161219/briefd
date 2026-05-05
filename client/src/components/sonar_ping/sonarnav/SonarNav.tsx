@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 
 interface SonarNavProps {
   clientId: string | null;
+  slug: string | null;
   projectName?: string;
 }
 
-export const SonarNav = ({ clientId, projectName }: SonarNavProps) => {
-  const { id } = useParams();
+export const SonarNav = ({ clientId, slug, projectName }: SonarNavProps) => {
   const [copied, setCopied] = useState(false);
 
-  const clientUrl = `${window.location.origin}/b/${id}`;
+  const clientUrl = `${window.location.origin}/b/${slug}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(clientUrl);

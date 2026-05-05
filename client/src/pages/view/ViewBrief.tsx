@@ -37,10 +37,11 @@ export const ViewBrief = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!id) return;
+    if (!brief?.slug) return;
 
     const joinBrief = () => {
-      socket.emit("join-brief", id);
+      socket.emit("join-brief", brief?.slug);
+      console.log(`connected to ${brief?.slug}`);
     };
 
     // Join immediately if already connected, or on (re)connect
@@ -48,23 +49,23 @@ export const ViewBrief = () => {
     socket.on("connect", joinBrief);
 
     // Listen for brief submission
-    socket.on(`brief-updated-${id}`, () => {
+    socket.on(`brief-updated-${brief?.slug}`, () => {
       console.log("5. Brief updated event received — refetching");
       queryClient.invalidateQueries({ queryKey: ["brief", id] });
     });
 
     // Listen for client field activity
-    const activityEvent = `client-activity-${id}`;
+    const activityEvent = `client-activity-${brief?.slug}`;
     socket.on(activityEvent, ({ fieldName, isTyping }) => {
       setActiveField(isTyping ? fieldName : null);
     });
 
     return () => {
       socket.off("connect", joinBrief);
-      socket.off(`brief-updated-${id}`);
+      socket.off(`brief-updated-${brief?.slug}`);
       socket.off(activityEvent);
     };
-  }, [id, queryClient]);
+  }, [brief?.slug, queryClient]);
 
   // Helpers for dynamic data formatting
   const getInitials = (name: string) => {
@@ -116,6 +117,7 @@ export const ViewBrief = () => {
     return (
       <SonarPing
         clientId={brief.clientId}
+        slug={brief.slug}
         activeField={activeField}
         fieldLabels={fieldLabels}
       />
@@ -124,7 +126,7 @@ export const ViewBrief = () => {
 
   const handleDownload = () => {
     openModal("DOWNLOAD");
-    setBriefInfo(brief.id, brief.projectName);
+    setBriefInfo(brief.id, brief?.projectName);
   };
 
   return (

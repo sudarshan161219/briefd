@@ -4,21 +4,22 @@ import styles from "./index.module.css";
 
 interface SonarPingProps {
   clientId: string | null;
+  slug: string | null;
   activeField: string | null;
   fieldLabels: Record<string, string>;
 }
 
 export const SonarPing: FC<SonarPingProps> = ({
   clientId,
+  slug,
   activeField,
   fieldLabels,
 }) => {
   const currentLabel = activeField ? fieldLabels[activeField] : null;
 
-
   return (
     <div className={styles.panel} id="panel-e">
-      <SonarNav clientId={clientId} />
+      <SonarNav slug={slug} clientId={clientId} />
 
       <div className={styles.stage}>
         <div className={styles.radarwrap}>
