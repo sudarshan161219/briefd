@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import api from "@/lib/api/api";
 
 // ==========================================
@@ -109,8 +110,14 @@ export const useCreateClient = () => {
   return useMutation({
     mutationFn: createClient,
     onSuccess: () => {
-      // Instantly invalidate the clients list so the UI updates
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+    onError: (error) => {
+      const errorMessage =
+        error.response?.data?.message || error.message || "An error occurred";
+      toast.error(errorMessage);
+      // console.error("Mutation failed:", error.message);
+      // toast.error(error.message);
     },
   });
 };

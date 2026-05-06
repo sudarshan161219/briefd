@@ -41,14 +41,13 @@ export const CreateClientModal = () => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
     try {
       await createClient({
         name: name.trim(),
         email: email.trim(),
-        // Pass undefined if the string is empty so the DB handles it properly
         companyName: companyName.trim() || undefined,
       });
 

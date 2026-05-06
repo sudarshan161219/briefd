@@ -9,6 +9,8 @@ import { nanoid } from "nanoid";
 import { generateSlug } from "./helpers/generateSlug.js";
 import { buildHtml } from "./helpers/buildHtml.js";
 import puppeteer, { Browser } from "puppeteer";
+import { errorMiddleware } from "./middlewares/errorMiddleware.js";
+import { AppError } from "./errors/AppError.js";
 import { getAuthToken } from "./lib/getAuthToken.js";
 
 const app = express();
@@ -34,7 +36,6 @@ io.on("connection", (socket) => {
   socket.on("field-focus", ({ briefId, fieldName, isTyping }) => {
     const eventName = `client-activity-${briefId}`;
     socket.to(`brief-${briefId}`).emit(eventName, { fieldName, isTyping });
-    console.log(`Server broadcast on: ${eventName}`);
   });
 
   socket.on("disconnect", () => {
@@ -78,14 +79,15 @@ app.get("/", async (req, res) => {
 });
 
 // create user(freelancer)
-app.post("/api/user", async (req, res) => {
+app.post("/api/user", async (req, res, next) => {
   try {
     const { name } = req.body;
 
     if (!name || typeof name !== "string" || name.trim() === "") {
-      return res
-        .status(400)
-        .json({ error: "A valid 'name' is required to generate a brief." });
+      throw new AppError({
+        message: "A valid 'name' is required to generate a brief.",
+        statusCode: 400,
+      });
     }
 
     const user = await prisma.user.create({
@@ -100,72 +102,63 @@ app.post("/api/user", async (req, res) => {
       slug: user.slug,
       name: user.name,
     });
-  } catch (error) {
-    console.error("[Create User Error]:", error);
+  } catch (error: any) {
     if (error.code === "P2002") {
-      return res.status(409).json({
-        error: "A database collision occurred. Please try again.",
-      });
+      next(
+        new AppError({
+          message: "A database collision occurred. Please try again.",
+          statusCode: 409,
+          cause: error,
+        }),
+      );
+    } else {
+      next(error);
     }
-    res.status(500).json({
-      error: "An unexpected error occurred while generating the user.",
-    });
   }
 });
 
 // get user(freelancer)
-app.get("/api/user/me", async (req, res) => {
+app.get("/api/user/me", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
-
-    // Look up the user
     const user = await prisma.user.findUnique({
       where: { adminToken: adminToken },
     });
 
-    //  Handle invalid/expired tokens
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized: Invalid token." });
+      throw new AppError({
+        message: "Unauthorized: Invalid token.",
+        statusCode: 401,
+      });
     }
 
-    // 6. Return the user data
     res.status(200).json({
       adminToken: user.adminToken,
       slug: user.slug,
       name: user.name,
     });
   } catch (error) {
-    console.error("[Fetch User Error]:", error);
-    res.status(500).json({
-      error: "An unexpected error occurred while fetching user data.",
-    });
+    next(error);
   }
 });
 
 // create client
-app.post("/api/client", async (req, res) => {
+app.post("/api/client", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
-
-    // client creation limitation
-    //  const MAX_CLIENTS = 5;
-    //   const clientCount = await prisma.client.count({
-    //     where: { userId: adminToken },
-    //   });
-
-    //   if (clientCount >= MAX_CLIENTS) {
-    //     return res.status(403).json({
-    //       error: `limit reached: You can only have up to ${MAX_CLIENTS} clients.`,
-    //     });
-    //   }
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const { name, email, companyName } = req.body;
 
     if (!name || !email) {
-      return res.status(400).json({ error: "Name and email are required." });
+      throw new AppError({
+        message: "Name and email are required.",
+        statusCode: 400,
+      });
     }
 
     const existingUser = await prisma.client.findUnique({
@@ -175,7 +168,7 @@ app.post("/api/client", async (req, res) => {
     if (existingUser) {
       throw new AppError({
         message: "Email already in use.",
-        statusCode: StatusCodes.CONFLICT,
+        statusCode: 409, // Conflict
         code: "EMAIL_CONFLICT",
         debugMessage: `Attempted to register with existing email: ${email}`,
       });
@@ -192,27 +185,20 @@ app.post("/api/client", async (req, res) => {
 
     res.status(201).json(client);
   } catch (error) {
-    console.error("[Create Client Error]:", error);
-    res.status(500).json({ error: "Failed to create client." });
+    next(error);
   }
 });
 
 // get all clients by user(adminToken)
-app.get("/api/client", async (req, res) => {
+app.get("/api/client", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
-    const {
-      search,
-      sortBy = "name", // Default sort by name
-      order = "asc", // Default order ascending
-      hasCompany, // Optional filter: 'true' or 'false'
-    } = req.query;
+    const { search, sortBy = "name", order = "asc", hasCompany } = req.query;
 
-    const whereClause: Prisma.ClientWhereInput = {
-      userId: adminToken,
-    };
+    const whereClause: Prisma.ClientWhereInput = { userId: adminToken };
 
     if (search && typeof search === "string") {
       whereClause.OR = [
@@ -222,11 +208,8 @@ app.get("/api/client", async (req, res) => {
       ];
     }
 
-    if (hasCompany === "true") {
-      whereClause.companyName = { not: null };
-    } else if (hasCompany === "false") {
-      whereClause.companyName = null;
-    }
+    if (hasCompany === "true") whereClause.companyName = { not: null };
+    else if (hasCompany === "false") whereClause.companyName = null;
 
     const validSortFields = ["name", "email", "companyName"];
     const sortField = validSortFields.includes(sortBy as string)
@@ -236,69 +219,60 @@ app.get("/api/client", async (req, res) => {
 
     const clients = await prisma.client.findMany({
       where: whereClause,
-      orderBy: {
-        [sortField as string]: sortOrder,
-      },
-      include: {
-        briefs: true,
-      },
+      orderBy: { [sortField as string]: sortOrder },
+      include: { briefs: true },
     });
+
     res.status(200).json(clients);
   } catch (error) {
-    console.error("[Get Client Error]:", error);
-    res.status(500).json({ error: "Failed to fetch client." });
+    next(error);
   }
 });
 
 // get client by id and user(admintoken)
-app.get("/api/client/:id", async (req, res) => {
+app.get("/api/client/:id", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const { id } = req.params;
 
-    const client = await prisma.client.findUnique({
-      where: { id },
-    });
+    const client = await prisma.client.findUnique({ where: { id } });
 
-    if (!client) {
-      return res.status(404).json({ error: "Client not found." });
-    }
+    if (!client)
+      throw new AppError({ message: "Client not found.", statusCode: 404 });
 
     if (client.userId !== adminToken) {
-      return res.status(403).json({
-        error: "Forbidden. This client belongs to another workspace.",
+      throw new AppError({
+        message: "Forbidden. This client belongs to another workspace.",
+        statusCode: 403,
       });
     }
 
     res.status(200).json(client);
   } catch (error) {
-    console.error("[Get Client Error]:", error);
-    res.status(500).json({ error: "Failed to fetch client." });
+    next(error);
   }
 });
 
-// update client (name, email, companyName)
-app.patch("/api/client/:id", async (req, res) => {
+// update client
+app.patch("/api/client/:id", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const { id } = req.params;
     const { name, email, companyName } = req.body;
 
-    // 1. Verify ownership before updating
     const existingClient = await prisma.client.findUnique({ where: { id } });
 
-    if (!existingClient) {
-      return res.status(404).json({ error: "Client not found." });
-    }
-    if (existingClient.userId !== adminToken) {
-      return res.status(403).json({ error: "Forbidden." });
-    }
+    if (!existingClient)
+      throw new AppError({ message: "Client not found.", statusCode: 404 });
+    if (existingClient.userId !== adminToken)
+      throw new AppError({ message: "Forbidden.", statusCode: 403 });
 
-    // 2. Perform the update
     const updatedClient = await prisma.client.update({
       where: { id },
       data: {
@@ -309,82 +283,72 @@ app.patch("/api/client/:id", async (req, res) => {
     });
 
     res.status(200).json(updatedClient);
-  } catch (error) {
-    console.error("[Update Client Error]:", error);
+  } catch (error: any) {
     if (error.code === "P2002") {
-      return res
-        .status(409)
-        .json({ error: "Another client already uses this email." });
+      next(
+        new AppError({
+          message: "Another client already uses this email.",
+          statusCode: 409,
+          cause: error,
+        }),
+      );
+    } else {
+      next(error);
     }
-    res.status(500).json({ error: "Failed to update client." });
   }
 });
 
-// delete cient
-app.delete("/api/client/:id", async (req, res) => {
+// delete client
+app.delete("/api/client/:id", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const { id } = req.params;
 
-    // 1. Verify ownership before deleting
     const existingClient = await prisma.client.findUnique({ where: { id } });
 
-    if (!existingClient) {
-      return res.status(404).json({ error: "Client not found." });
-    }
-    if (existingClient.userId !== adminToken) {
-      return res.status(403).json({ error: "Forbidden." });
-    }
+    if (!existingClient)
+      throw new AppError({ message: "Client not found.", statusCode: 404 });
+    if (existingClient.userId !== adminToken)
+      throw new AppError({ message: "Forbidden.", statusCode: 403 });
 
-    // 2. Perform the delete
-    await prisma.client.delete({
-      where: { id },
-    });
+    await prisma.client.delete({ where: { id } });
 
     res
       .status(200)
       .json({ success: true, message: "Client deleted successfully." });
   } catch (error) {
-    console.error("[Delete Client Error]:", error);
-    res.status(500).json({ error: "Failed to delete client." });
+    next(error);
   }
 });
 
-//- Brief -//
 // create brief
-app.post("/api/brief", async (req, res) => {
+app.post("/api/brief", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const user = await prisma.user.findUnique({
       where: { adminToken },
       select: { id: true },
     });
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid token. User not found." });
-    }
-
-    // brief creation limitation
-    // const MAX_BRIEFS = 5;
-    // const briefCount = await prisma.brief.count({
-    //   where: { userId: user.id },
-    // });
-
-    // if (briefCount >= MAX_BRIEFS) {
-    //   return res.status(403).json({
-    //     error: `Showcase limit reached: You can only create up to ${MAX_BRIEFS} briefs.`,
-    //   });
-    // }
+    if (!user)
+      throw new AppError({
+        message: "Invalid token. User not found.",
+        statusCode: 401,
+      });
 
     const { name, clientId } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ error: "Brief name is required." });
-    }
+    if (!name)
+      throw new AppError({
+        message: "Brief name is required.",
+        statusCode: 400,
+      });
 
     if (clientId) {
       const client = await prisma.client.findUnique({
@@ -392,15 +356,14 @@ app.post("/api/brief", async (req, res) => {
       });
 
       if (!client || client.userId !== adminToken) {
-        return res.status(403).json({
-          error: "Forbidden. Client does not exist or belong to you.",
+        throw new AppError({
+          message: "Forbidden. Client does not exist or belong to you.",
+          statusCode: 403,
         });
       }
     }
 
-    // Creating unique Slug
     let uniqueSlug = generateSlug(name);
-
     let isSlugUnique = false;
     while (!isSlugUnique) {
       const existing = await prisma.brief.findUnique({
@@ -410,7 +373,6 @@ app.post("/api/brief", async (req, res) => {
       else uniqueSlug = generateSlug(name);
     }
 
-    //  Database Operation
     const newBrief = await prisma.brief.create({
       data: {
         name: name.trim(),
@@ -421,41 +383,44 @@ app.post("/api/brief", async (req, res) => {
       },
     });
 
-    //  Success Response
     res.status(201).json(newBrief);
-  } catch (error) {
-    console.error("[Create Brief Error]:", error);
+  } catch (error: any) {
     if (error.code === "P2002") {
-      return res.status(409).json({
-        error: "A brief with this slug already exists. Please try again.",
-      });
+      next(
+        new AppError({
+          message: "A brief with this slug already exists. Please try again.",
+          statusCode: 409,
+          cause: error,
+        }),
+      );
+    } else {
+      next(error);
     }
-    res.status(500).json({
-      error: "An unexpected error occurred while generating the brief.",
-    });
   }
 });
 
-app.get("/api/brief", async (req, res) => {
+// get briefs
+app.get("/api/brief", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const user = await prisma.user.findUnique({
       where: { adminToken },
       select: { id: true },
     });
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid token. User not found." });
-    }
+    if (!user)
+      throw new AppError({
+        message: "Invalid token. User not found.",
+        statusCode: 401,
+      });
 
     const { clientId } = req.query;
 
     const whereClause: any = { userId: user.id };
-    if (clientId) {
-      whereClause.clientId = String(clientId);
-    }
+    if (clientId) whereClause.clientId = String(clientId);
 
     const briefs = await prisma.brief.findMany({
       where: whereClause,
@@ -464,48 +429,46 @@ app.get("/api/brief", async (req, res) => {
 
     res.status(200).json(briefs);
   } catch (error) {
-    console.error("[Fetch Briefs Error]:", error);
-    res.status(500).json({ error: "Failed to fetch briefs." });
+    next(error);
   }
 });
 
-//  Fetch brief (user with admin token)
-app.get("/api/brief/:id", async (req, res) => {
+// Fetch brief
+app.get("/api/brief/:id", async (req, res, next) => {
   try {
     const adminToken = getAuthToken(req);
-    if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
 
     const user = await prisma.user.findUnique({
       where: { adminToken },
       select: { id: true },
     });
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid token. User not found." });
-    }
+    if (!user)
+      throw new AppError({
+        message: "Invalid token. User not found.",
+        statusCode: 401,
+      });
 
     const brief = await prisma.brief.findUnique({
-      where: {
-        id: req.params.id,
-        userId: user.id,
-      },
+      where: { id: req.params.id, userId: user.id },
       include: {
-        client: {
-          select: { name: true, companyName: true, email: true },
-        },
+        client: { select: { name: true, companyName: true, email: true } },
       },
     });
 
-    if (!brief) return res.status(404).json({ error: "Brief not found" });
+    if (!brief)
+      throw new AppError({ message: "Brief not found", statusCode: 404 });
+
     res.status(200).json(brief);
   } catch (error) {
-    console.error("[Fetch Brief Error]:", error);
-    res.status(500).json({ error: "Failed to fetch brief." });
+    next(error);
   }
 });
 
 // Client submits the brief
-app.put("/api/brief/:id", async (req, res) => {
+app.put("/api/brief/:id", async (req, res, next) => {
   try {
     const {
       projectName,
@@ -520,6 +483,7 @@ app.put("/api/brief/:id", async (req, res) => {
       references,
       additionalInfo,
     } = req.body;
+
     const updatedBrief = await prisma.brief.update({
       where: { slug: req.params.id },
       data: {
@@ -539,34 +503,24 @@ app.put("/api/brief/:id", async (req, res) => {
     });
 
     const io = req.app.get("io");
-
     if (io) {
       io.to(`brief-${req.params.id}`).emit(
         `brief-updated-${req.params.id}`,
         updatedBrief,
       );
-    } else {
-      console.warn("Socket 'io' is not defined in this route!");
     }
 
     res.json(updatedBrief);
   } catch (error) {
-    console.error("🚨 [PUT /api/brief/:id] Crash:", error);
-
-    res.status(500).json({
-      error: "Failed to submit brief",
-      details: error.message,
-    });
+    next(error); // Passes prisma errors (like slug not found) straight to your middleware
   }
 });
 
-app.get("/api/public/brief/:id", async (req, res) => {
+// Get Public Brief
+app.get("/api/public/brief/:id", async (req, res, next) => {
   try {
     const brief = await prisma.brief.findUnique({
-      where: {
-        slug: req.params.id,
-      },
-
+      where: { slug: req.params.id },
       select: {
         id: true,
         projectName: true,
@@ -574,6 +528,31 @@ app.get("/api/public/brief/:id", async (req, res) => {
         updatedAt: true,
         status: true,
         deadline: true,
+        client: { select: { name: true, companyName: true, email: true } },
+      },
+    });
+
+    if (!brief)
+      throw new AppError({
+        message: "Brief not found or link is invalid.",
+        statusCode: 404,
+      });
+
+    res.status(200).json(brief);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Download Brief
+app.get("/api/brief/:id/download", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const format = req.query.format as string;
+
+    const brief = await prisma.brief.findUnique({
+      where: { slug: id },
+      include: {
         client: {
           select: {
             name: true,
@@ -583,35 +562,14 @@ app.get("/api/public/brief/:id", async (req, res) => {
         },
       },
     });
-
-    if (!brief) {
-      return res
-        .status(404)
-        .json({ error: "Brief not found or link is invalid." });
-    }
-
-    res.status(200).json(brief);
-  } catch (error) {
-    console.error("[Fetch Public Brief Error]:", error);
-    res.status(500).json({ error: "Failed to load the brief." });
-  }
-});
-
-// 4. User and Client Single source of truth (Download a copy)
-app.get("/api/brief/:id/download", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const format = req.query.format as string;
-
-    const brief = await prisma.brief.findUnique({ where: { slug: id } });
-    if (!brief) return res.status(404).json({ error: "Brief not found" });
+    if (!brief)
+      throw new AppError({ message: "Brief not found", statusCode: 404 });
 
     const safeProjectName =
       brief.projectName?.replace(/\s+/g, "-").toLowerCase() || "project";
     const ext = format === "pdf" ? "pdf" : format === "doc" ? "doc" : "txt";
     const fileName = `${safeProjectName}-brief.${ext}`;
 
-    // ── TXT ──────────────────────────────────
     if (format === "txt") {
       const submittedDate = fmt(brief.createdAt, "long") ?? "N/A";
       const deadlineFormatted =
@@ -644,9 +602,9 @@ app.get("/api/brief/:id/download", async (req, res) => {
         line,
         "  CLIENT",
         line,
-        kv("Name", brief.clientName),
-        kv("Email", brief.clientEmail),
-        kv("Company", brief.companyName),
+        kv("Name", brief.client?.name),
+        kv("Email", brief.client?.email),
+        kv("Company", brief.client?.companyName),
         "",
         line,
         "  LOGISTICS",
@@ -692,7 +650,6 @@ app.get("/api/brief/:id/download", async (req, res) => {
       return res.send(txtContent);
     }
 
-    // ── DOC ──────────────────────────────────
     if (format === "doc") {
       const html = buildHtml(brief, id);
       res.setHeader(
@@ -703,27 +660,19 @@ app.get("/api/brief/:id/download", async (req, res) => {
       return res.send("\ufeff" + html);
     }
 
-    // ── PDF ──────────────────────────────────
     if (format === "pdf") {
-      if (!globalBrowser) return res.status(500).send("PDF engine not ready");
-
+      if (!globalBrowser)
+        throw new AppError({
+          message: "PDF engine not ready",
+          statusCode: 500,
+        });
       let page;
-
       try {
         page = await globalBrowser.newPage();
         const html = buildHtml(brief, id);
-
-        // Set HTML directly — no network round-trip needed
         await page.setContent(html, { waitUntil: "networkidle0" });
-
         const pdfBuffer = await page.pdf({
           format: "A4",
-          margin: {
-            top: "2.4cm",
-            bottom: "2.4cm",
-            left: "2.8cm",
-            right: "2.8cm",
-          },
           printBackground: true,
         });
 
@@ -732,33 +681,27 @@ app.get("/api/brief/:id/download", async (req, res) => {
           `attachment; filename="${fileName}"`,
         );
         res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Length", pdfBuffer.length);
         return res.send(pdfBuffer);
-      } catch (error) {
-        console.error("Error generating PDF:", error);
-        return res
-          .status(500)
-          .send("An error occurred while generating the PDF.");
       } finally {
-        await page.close();
+        if (page) await page.close();
       }
     }
 
-    return res.status(400).json({
-      error: "Invalid format. Use ?format=txt, ?format=doc, or ?format=pdf",
+    throw new AppError({
+      message: "Invalid format. Use ?format=txt, ?format=doc, or ?format=pdf",
+      statusCode: 400,
     });
   } catch (error) {
-    console.error("Download error:", error);
-    res.status(500).json({ error: "Failed to generate download" });
+    next(error);
   }
 });
 
+// error middleware
+app.use(errorMiddleware);
+
 async function startServer() {
   try {
-    // Start the browser
     await initBrowser();
-
-    // Start listening
     httpServer.listen(PORT, () =>
       console.log(`Server running on port ${PORT}`),
     );
