@@ -25,7 +25,8 @@ export const useCreateUser = () => {
     mutationFn: createUser,
     onSuccess: (data) => {
       setAuthToken(data.adminToken);
-      queryClient.setQueryData(["currentUser"], data);
+      // queryClient.setQueryData(["currentUser"], data);
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 };

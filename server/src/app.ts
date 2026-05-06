@@ -44,11 +44,33 @@ io.on("connection", (socket) => {
 });
 
 let globalBrowser: Browser | undefined;
+
 async function initBrowser() {
+  if (globalBrowser) {
+    globalBrowser.close().catch(() => {});
+  }
+
   globalBrowser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
   });
+
+  console.log("✅ Puppeteer browser initialized");
+}
+
+export async function getHealthyBrowser(): Promise<Browser> {
+  // If undefined OR disconnected, restart it
+  if (!globalBrowser || !globalBrowser.connected) {
+    console.warn("⚠️ Browser disconnected or missing! Re-initializing...");
+    await initBrowser();
+  }
+
+  // We can safely assert this is defined now
+  return globalBrowser!;
 }
 
 app.get("/", async (req, res) => {
@@ -661,14 +683,10 @@ app.get("/api/brief/:id/download", async (req, res, next) => {
     }
 
     if (format === "pdf") {
-      if (!globalBrowser)
-        throw new AppError({
-          message: "PDF engine not ready",
-          statusCode: 500,
-        });
       let page;
       try {
-        page = await globalBrowser.newPage();
+        const browser = await getHealthyBrowser();
+        page = await browser.newPage();
         const html = buildHtml(brief, id);
         await page.setContent(html, { waitUntil: "networkidle0" });
         const pdfBuffer = await page.pdf({

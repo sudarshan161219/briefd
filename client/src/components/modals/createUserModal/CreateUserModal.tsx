@@ -35,12 +35,11 @@ export const CreateProfileModal = () => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
     try {
       await createUser({ name: name.trim() });
-      //  Route to dashboard and close modal
       navigate("/dashboard");
       closeModal();
     } catch (err) {
