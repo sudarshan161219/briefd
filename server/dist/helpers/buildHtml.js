@@ -1,33 +1,4 @@
 import { esc, fmt } from "./esc.js";
-
-// 1. Define your expected data shape for better type safety
-export interface ProjectBrief {
-  id: string;
-  slug: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-  status: string;
-  projectName: string | null;
-  primaryGoal: string | null;
-  needBuilt: string | null;
-  targetAudience: string | null;
-  keyFeatures: string | null;
-  avoid: string | null;
-  deadline: Date | null;
-  budgetRange: string | null;
-  assetsUrls: string | null;
-  references: string | null;
-  additionalInfo: string | null;
-  userId: string;
-  clientId: string | null;
-  client: {
-    companyName: string | null;
-    email: string;
-    name: string;
-  } | null;
-}
-
 // 2. Extract CSS to prevent memory reallocation on every call
 const STYLES = `
   @page {
@@ -146,12 +117,11 @@ const STYLES = `
     color: #aaaaaa;
   }
 `;
-
 // 3. Extract the section builder logic
-const buildSection = (title: string, content?: string | null): string => {
-  if (!content?.trim()) return "";
-
-  return `
+const buildSection = (title, content) => {
+    if (!content?.trim())
+        return "";
+    return `
     <tr>
       <td class="section-cell">
         <p class="section-label">${title}</p>
@@ -160,22 +130,18 @@ const buildSection = (title: string, content?: string | null): string => {
     </tr>
   `;
 };
-
 // 4. Main HTML builder function
 // ... (keep the STYLES and buildSection helper from previous step) ...
-
 // Update the parameter type to PrismaBrief
-export const buildHtml = (brief: ProjectBrief, id: string): string => {
-  const submittedDate = fmt(brief.updatedAt) ?? "N/A";
-  const deadlineFormatted = fmt(brief.deadline) ?? "No hard deadline";
-  const projectName = esc(brief.projectName) || "Untitled Project";
-
-  // Safely extract client data (falling back to "N/A" if client is null)
-  const clientName = esc(brief.client?.name) || "N/A";
-  const clientEmail = esc(brief.client?.email) || "N/A";
-  const companyName = esc(brief.client?.companyName) || "N/A";
-
-  return `
+export const buildHtml = (brief, id) => {
+    const submittedDate = fmt(brief.updatedAt) ?? "N/A";
+    const deadlineFormatted = fmt(brief.deadline) ?? "No hard deadline";
+    const projectName = esc(brief.projectName) || "Untitled Project";
+    // Safely extract client data (falling back to "N/A" if client is null)
+    const clientName = esc(brief.client?.name) || "N/A";
+    const clientEmail = esc(brief.client?.email) || "N/A";
+    const companyName = esc(brief.client?.companyName) || "N/A";
+    return `
     <!DOCTYPE html>
     <html xmlns:o="urn:schemas-microsoft-com:office:office"
           xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -208,15 +174,13 @@ export const buildHtml = (brief: ProjectBrief, id: string): string => {
         </tr>
       </table>
     
-      ${
-        brief.primaryGoal?.trim()
-          ? `
+      ${brief.primaryGoal?.trim()
+        ? `
       <div class="goal-box">
         <p class="goal-label">Primary Goal</p>
         <p class="goal-text">${esc(brief.primaryGoal)}</p>
       </div>`
-          : ""
-      }
+        : ""}
     
       <table class="sections-table">
         ${buildSection("What needs to be built", brief.needBuilt)}
@@ -234,3 +198,4 @@ export const buildHtml = (brief: ProjectBrief, id: string): string => {
     </html>
   `.trim();
 };
+//# sourceMappingURL=buildHtml.js.map

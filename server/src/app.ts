@@ -3,7 +3,7 @@ import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { prisma } from "./utils/prismaClient.js";
-import { Prisma } from "../generated/prisma/client.js";
+import { Prisma } from "./generated/prisma/client.js";
 import { fmt } from "./helpers/esc.js";
 import { nanoid } from "nanoid";
 import { generateSlug } from "./helpers/generateSlug.js";
@@ -203,10 +203,12 @@ app.delete("/api/user", async (req, res, next) => {
       message: "Account and all associated data permanently deleted.",
     });
   } catch (error) {
-    if (error.code === "P2003") {
-      console.error(
-        "🚨 Prisma Constraint Error: You need to add 'onDelete: Cascade' to your schema.prisma relations!",
-      );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        console.error(
+          "🚨 Prisma Constraint Error: You need to add 'onDelete: Cascade' to your schema.prisma relations!",
+        );
+      }
     }
     next(error);
   }
@@ -254,11 +256,14 @@ app.post("/api/client", async (req, res, next) => {
 
     res.status(201).json(client);
   } catch (error) {
-    if (error.code === "P2003") {
-      return next(
-        new AppError({ message: "Invalid admin token.", statusCode: 401 }),
-      );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        return next(
+          new AppError({ message: "Invalid admin token.", statusCode: 401 }),
+        );
+      }
     }
+
     next(error);
   }
 });

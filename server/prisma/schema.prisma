@@ -17,7 +17,7 @@ model User {
   slug        String   @unique
 
   // Relation: A freelancer has many briefs and many clients
-  briefs        Brief[]
+  briefs      Brief[]
   clients     Client[]
 }
 

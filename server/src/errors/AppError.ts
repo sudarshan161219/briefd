@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 
-interface AppErrorsArgs {
+export interface AppErrorArgs {
   message: string;
   statusCode?: number;
   code?: string;
@@ -15,11 +15,12 @@ export class AppError extends Error {
   public readonly isOperational: boolean;
   public readonly cause?: unknown;
 
-  constructor(args: AppErrorsArgs) {
+  constructor(args: AppErrorArgs) {
     super(args.message);
     this.statusCode = args.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-    this.code = args.code;
-    this.debugMessage = args.debugMessage;
+    this.code = args.code || "INTERNAL_ERROR";
+    this.debugMessage =
+      args.debugMessage || "No additional debug context provided.";
     this.cause = args.cause;
     this.isOperational = true;
 

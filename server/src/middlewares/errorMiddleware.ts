@@ -24,7 +24,7 @@ export const errorMiddleware = (
   };
 
   if (process.env.NODE_ENV !== "production") {
-    response.stack = err.stack;
+    response.stack = err.stack || "";
     if (err instanceof AppError && err.debugMessage) {
       response.debug = err.debugMessage;
     }
