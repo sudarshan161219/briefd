@@ -120,98 +120,102 @@ export const ClientForm = () => {
         </div>
 
         {/* client section */}
-
-        <div className={styles.section}>
-          {brief?.client ? (
-            <div className={styles.clientCard}>
-              <div className={styles.clientHeader}>
-                <div className={styles.avatar}>
-                  {brief.client.name
-                    .split(" ")
-                    .slice(0, 2)
-                    .map((n: string) => n[0])
-                    .join("")
-                    .toUpperCase()}
+        {!isLoading && (
+          <div className={styles.section}>
+            {brief?.client ? (
+              <div className={styles.clientCard}>
+                <div className={styles.clientHeader}>
+                  <div className={styles.avatar}>
+                    {brief.client.name
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    <p className={styles.clientName}>{brief.client.name}</p>
+                    <p className={styles.clientSub}>Prepared for this brief</p>
+                  </div>
                 </div>
-                <div>
-                  <p className={styles.clientName}>{brief.client.name}</p>
-                  <p className={styles.clientSub}>Prepared for this brief</p>
-                </div>
-              </div>
-              <div className={styles.clientMeta}>
-                {brief.client.companyName && (
+                <div className={styles.clientMeta}>
+                  {brief.client.companyName && (
+                    <div className={styles.clientMetaItem}>
+                      <span className={styles.clientMetaKey}>Company</span>
+                      <span className={styles.clientMetaVal}>
+                        {brief.client.companyName}
+                      </span>
+                    </div>
+                  )}
                   <div className={styles.clientMetaItem}>
-                    <span className={styles.clientMetaKey}>Company</span>
-                    <span className={styles.clientMetaVal}>
-                      {brief.client.companyName}
+                    <span className={styles.clientMetaKey}>Email</span>
+                    <span className={styles.clientMetaValMono}>
+                      {brief.client.email}
                     </span>
                   </div>
-                )}
-                <div className={styles.clientMetaItem}>
-                  <span className={styles.clientMetaKey}>Email</span>
-                  <span className={styles.clientMetaValMono}>
-                    {brief.client.email}
-                  </span>
                 </div>
               </div>
-            </div>
-          ) : (
-            <>
-              <p className={styles.sectionLabel}>Who are you</p>
-              <div className={styles.row}>
-                <div className={styles.field}>
-                  <label className={styles.label}>Your name</label>
-                  <input
-                    className={styles.input}
-                    value={formData.clientName}
-                    type="text"
-                    placeholder="Alex Chen"
-                    onChange={(e) =>
-                      setFormData({ ...formData, clientName: e.target.value })
-                    }
-                    onFocus={() => handleActivity("clientName", true)}
-                    onBlur={() => handleActivity("clientName", false)}
-                    required
-                  />
+            ) : (
+              <>
+                <p className={styles.sectionLabel}>Who are you</p>
+                <div className={styles.row}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Your name</label>
+                    <input
+                      className={styles.input}
+                      value={formData.clientName}
+                      type="text"
+                      placeholder="Alex Chen"
+                      onChange={(e) =>
+                        setFormData({ ...formData, clientName: e.target.value })
+                      }
+                      onFocus={() => handleActivity("clientName", true)}
+                      onBlur={() => handleActivity("clientName", false)}
+                      required
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Email{" "}
+                      <span className={styles.optionalLabel}>(optional)</span>
+                    </label>
+                    <input
+                      className={styles.input}
+                      value={formData.clientEmail}
+                      type="email"
+                      placeholder="alex@company.com"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          clientEmail: e.target.value,
+                        })
+                      }
+                      onFocus={() => handleActivity("clientEmail", true)}
+                      onBlur={() => handleActivity("clientEmail", false)}
+                    />
+                  </div>
                 </div>
                 <div className={styles.field}>
                   <label className={styles.label}>
-                    Email{" "}
+                    Company{" "}
                     <span className={styles.optionalLabel}>(optional)</span>
                   </label>
                   <input
                     className={styles.input}
-                    value={formData.clientEmail}
-                    type="email"
-                    placeholder="alex@company.com"
+                    value={formData.companyName}
+                    type="text"
+                    placeholder="Acme Inc."
                     onChange={(e) =>
-                      setFormData({ ...formData, clientEmail: e.target.value })
+                      setFormData({ ...formData, companyName: e.target.value })
                     }
-                    onFocus={() => handleActivity("clientEmail", true)}
-                    onBlur={() => handleActivity("clientEmail", false)}
+                    onFocus={() => handleActivity("companyName", true)}
+                    onBlur={() => handleActivity("companyName", false)}
                   />
                 </div>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Company{" "}
-                  <span className={styles.optionalLabel}>(optional)</span>
-                </label>
-                <input
-                  className={styles.input}
-                  value={formData.companyName}
-                  type="text"
-                  placeholder="Acme Inc."
-                  onChange={(e) =>
-                    setFormData({ ...formData, companyName: e.target.value })
-                  }
-                  onFocus={() => handleActivity("companyName", true)}
-                  onBlur={() => handleActivity("companyName", false)}
-                />
-              </div>
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
+        )}
 
         <div className={styles.section}>
           <p className={styles.sectionLabel}>The project</p>
@@ -558,8 +562,8 @@ export const ClientForm = () => {
           </div>
         </div>
 
-        <Button className={styles.submitBtn} type="submit">
-          Submit brief
+        <Button disabled={isPending} className={styles.submitBtn} type="submit">
+          {isPending ? "Submiting...." : "Submit brief"}
           <svg
             width="14"
             height="14"

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import styles from "./index.module.css";
-import { useDownloadDocumentStore } from "@/store/DownloadDocumentStore/useDownloadDocumentStore";
 import { usePublicBrief } from "@/hooks/brief/useBrief";
 import { useModalStore } from "@/store/useModalStore";
 import { useBriefStore } from "@/store/brief/useBriefStore";
@@ -12,7 +11,7 @@ export const DrawnCheck = () => {
   const { openModal } = useModalStore();
   const { setBriefInfo } = useBriefStore();
   const { data: brief, isLoading } = usePublicBrief(id);
-  const { open } = useDownloadDocumentStore();
+  const [now, setNow] = useState(() => Date.now());
   const [confettiPieces, setConfettiPieces] = useState(() => {
     const colors = [
       "#7C6FE0",
@@ -36,6 +35,10 @@ export const DrawnCheck = () => {
     }));
   });
 
+  if (isLoading) {
+    <div>please wait...</div>;
+  }
+
   useEffect(() => {
     if (confettiPieces.length > 0) {
       const timer = setTimeout(() => {
@@ -45,10 +48,16 @@ export const DrawnCheck = () => {
     }
   }, [confettiPieces]);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setNow(Date.now());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const getRelativeTime = (isoString: string): string => {
-    const diff = Math.floor(
-      (Date.now() - new Date(isoString).getTime()) / 1000,
-    );
+    const diff = Math.floor((now - new Date(isoString).getTime()) / 1000);
 
     if (diff < 10) return "Just now";
     if (diff < 60) return `${diff}s ago`;

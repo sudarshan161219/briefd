@@ -14,7 +14,6 @@ import {
   ArrowRight,
   Mail,
   Pencil,
-  Trash2,
   Clock,
   CheckCircle2,
 } from "lucide-react";
@@ -49,16 +48,16 @@ export const ClientBriefs = () => {
     setClient(client ?? null);
   };
 
-  const handleDelete = () => {
-    if (
-      !window.confirm(
-        `Delete ${client?.name}? All their briefs will be removed.`,
-      )
-    )
-      return;
-    // TODO: DELETE /api/clients/:id
-    toast.success("Client deleted");
-  };
+  // const handleDelete = () => {
+  //   if (
+  //     !window.confirm(
+  //       `Delete ${client?.name}? All their briefs will be removed.`,
+  //     )
+  //   )
+  //     return;
+  //   // TODO: DELETE /api/clients/:id
+  //   toast.success("Client deleted");
+  // };
 
   const handleCreateBrief = () => {
     setClientId(id);
@@ -145,7 +144,8 @@ export const ClientBriefs = () => {
         </div>
 
         {/* ── Brief grid ── */}
-        {briefs?.length === 0 ? (
+
+        {!isBriefsLoading && briefs?.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}>
               <svg

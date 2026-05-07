@@ -72,7 +72,7 @@ export const Cards = ({ clients }: Props) => {
             {client.briefs.length > 0 && (
               <span className={styles.metaItem}>
                 {client.briefs.length} brief
-                {client.briefs.length !== 1 ? "s" : ""}
+                {client.briefs.length > 1 ? "s" : ""}
               </span>
             )}
           </div>

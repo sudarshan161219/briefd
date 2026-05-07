@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export const EditClientModal = () => {
   const { closeModal } = useModalStore();
   const { client } = useEditClientStore();
-  const { mutate, isPending, isError, error } = useUpdateClient();
+  const { mutate, isPending } = useUpdateClient();
 
   const [form, setForm] = useState({
     name: client?.name,

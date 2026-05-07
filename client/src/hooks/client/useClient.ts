@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import axios from "axios";
 import api from "@/lib/api/api";
 
 // ==========================================
@@ -98,6 +99,7 @@ export const useClients = (params?: ClientQueryParams) => {
   return useQuery({
     queryKey: ["clients", params],
     queryFn: () => fetchAllClients(params),
+    
   });
 };
 
@@ -113,11 +115,18 @@ export const useCreateClient = () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
     onError: (error) => {
-      const errorMessage =
-        error.response?.data?.message || error.message || "An error occurred";
+      let errorMessage = "An error occurred";
+
+      // Check if it's an Axios error
+      if (axios.isAxiosError(error)) {
+        // TypeScript now knows 'error' has a 'response' property
+        errorMessage = error.response?.data?.message || error.message;
+      } else if (error instanceof Error) {
+        // Fallback for standard JavaScript errors
+        errorMessage = error.message;
+      }
+
       toast.error(errorMessage);
-      // console.error("Mutation failed:", error.message);
-      // toast.error(error.message);
     },
   });
 };
