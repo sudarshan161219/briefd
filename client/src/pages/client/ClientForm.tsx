@@ -62,8 +62,6 @@ export const ClientForm = () => {
 
   // 3. Helper to emit typing activity (working)
   const handleActivity = (fieldName: string, isTyping: boolean) => {
-    console.log(`connected to ${id}`);
-
     if (socket.connected) {
       socket.emit("field-focus", {
         briefId: id,

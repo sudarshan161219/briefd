@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 import { useModalStore } from "@/store/useModalStore";
 import { useClients } from "@/hooks/client/useClient";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,46 @@ export const Dashboard = () => {
     // Cleanup the event listener when the component unmounts
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  if (isLoading)
+    return (
+      <div className={styles.loadingWrapper}>
+        <span className={styles.waitingText}>
+          Loading Clients<span className={styles.spinningEmoji}>⏳</span>
+        </span>
+      </div>
+    );
+
+  if (!clients || clients.length === 0) {
+    return (
+      <div className={styles.EmptyResponse}>
+        <div className={styles.iconWrap}>
+          <div className={styles.iconGrid}>
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className={styles.gridDot}></div>
+            ))}
+          </div>
+          <Users size={26} strokeWidth={1.5} className={styles.icon} />
+        </div>
+
+        <div className={styles.EmptyResponseInfo}>
+          <span className={styles.eyebrow}>Clients</span>
+          <h2>No clients yet</h2>
+          <p>
+            Add your first client to start sending briefs and managing projects.
+          </p>
+
+          <Button
+            onClick={() => openModal("CREATE_CLIENT")}
+            className={styles.newBtn}
+          >
+            <Plus size={14} />
+            Add new client
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

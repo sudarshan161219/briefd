@@ -107,13 +107,13 @@ export const ClientBriefs = () => {
               >
                 <Pencil size={13} />
               </button>
-              <button
+              {/* <button
                 className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                 title="Delete client"
                 onClick={handleDelete}
               >
                 <Trash2 size={13} />
-              </button>
+              </button> */}
               <div className={styles.actionRule} />
               <Button className={styles.newBtn} onClick={handleCreateBrief}>
                 <Plus size={13} /> New brief
@@ -178,11 +178,10 @@ export const ClientBriefs = () => {
               const isDone = brief.status === "COMPLETED";
 
               return (
-                <div key={brief.id} className={styles.briefCard}>
-                  <div
-                    className={`${styles.cardStripe} ${isDone ? styles.stripeGreen : styles.stripeAmber}`}
-                  />
-
+                <div
+                  key={brief.id}
+                  className={`${styles.briefCard} ${isDone ? styles.cardGreen : styles.cardAmber}`}
+                >
                   <div className={styles.cardBody}>
                     <div className={styles.cardTop}>
                       <div>

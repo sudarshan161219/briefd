@@ -9,7 +9,7 @@ datasource db {
 
 
 model User {
-  id              String   @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   adminToken  String   @unique @default(uuid())
 
@@ -24,7 +24,7 @@ model User {
 model Client {
   id          String   @id @default(uuid())
   name        String
-  email       String   @unique
+  email       String   
   companyName String?
 
   // A client belongs to a specific freelancer (User)
@@ -33,6 +33,7 @@ model Client {
 
   // A client can have many briefs over time (repeat business)
   briefs      Brief[]
+  @@unique([email, userId])
 }
 
 

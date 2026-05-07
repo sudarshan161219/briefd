@@ -4,14 +4,11 @@ import { useThemeStore } from "@/store/theme/useThemeStore";
 import styles from "./index.module.css";
 import { useModalStore } from "@/store/useModalStore";
 import { useAuthStore } from "@/store/user/useAuthStore";
-import { useGetUser } from "@/hooks/user/useGetUser";
 
 export const Home = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated, user } = useAuthStore();
   const { openModal } = useModalStore();
-
-  console.log(isAuthenticated, user);
 
   return (
     <div className={styles.page}>

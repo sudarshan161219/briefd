@@ -7,6 +7,7 @@ export type ModalType =
   | "EDIT_CLIENT"
   | "DOWNLOAD"
   | "DELETE"
+  | "DELETE_USER"
   | null;
 
 interface ModalState {

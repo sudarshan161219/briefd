@@ -16,21 +16,29 @@ import { getAuthToken } from "./lib/getAuthToken.js";
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST", "PUT"] },
+  cors: {
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.set("io", io);
 
 io.on("connection", (socket) => {
-  console.log(`🟢 New client connected: ${socket.id}`);
+  // console.log(`🟢 New client connected: ${socket.id}`);
 
   socket.on("join-brief", (briefId) => {
     socket.join(`brief-${briefId}`);
-    console.log(`Client ${socket.id} joined room: brief-${briefId}`);
+    // console.log(`Client ${socket.id} joined room: brief-${briefId}`);
   });
 
   socket.on("field-focus", ({ briefId, fieldName, isTyping }) => {
@@ -39,7 +47,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log(`🔴 Client disconnected: ${socket.id}`);
+    // console.log(`🔴 Client disconnected: ${socket.id}`);
   });
 });
 
@@ -59,7 +67,7 @@ async function initBrowser() {
     ],
   });
 
-  console.log("✅ Puppeteer browser initialized");
+  // console.log("✅ Puppeteer browser initialized");
 }
 
 export async function getHealthyBrowser(): Promise<Browser> {
@@ -167,6 +175,43 @@ app.get("/api/user/me", async (req, res, next) => {
   }
 });
 
+// delete user(freelancer)
+app.delete("/api/user", async (req, res, next) => {
+  try {
+    const adminToken = getAuthToken(req);
+    if (!adminToken)
+      throw new AppError({ message: "Unauthorized", statusCode: 401 });
+
+    const user = await prisma.user.findUnique({
+      where: { adminToken },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new AppError({
+        message: "Unauthorized: Invalid token.",
+        statusCode: 401,
+      });
+    }
+
+    await prisma.user.delete({
+      where: { id: user.id },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Account and all associated data permanently deleted.",
+    });
+  } catch (error) {
+    if (error.code === "P2003") {
+      console.error(
+        "🚨 Prisma Constraint Error: You need to add 'onDelete: Cascade' to your schema.prisma relations!",
+      );
+    }
+    next(error);
+  }
+});
+
 // create client
 app.post("/api/client", async (req, res, next) => {
   try {
@@ -183,14 +228,16 @@ app.post("/api/client", async (req, res, next) => {
       });
     }
 
-    const existingUser = await prisma.client.findUnique({
-      where: { email },
+    const formattedEmail = email.trim().toLowerCase();
+
+    const existingUser = await prisma.client.findFirst({
+      where: { email: formattedEmail, userId: adminToken },
     });
 
     if (existingUser) {
       throw new AppError({
-        message: "Email already in use.",
-        statusCode: 409, // Conflict
+        message: "You already have a client with this email.",
+        statusCode: 409,
         code: "EMAIL_CONFLICT",
         debugMessage: `Attempted to register with existing email: ${email}`,
       });
@@ -199,7 +246,7 @@ app.post("/api/client", async (req, res, next) => {
     const client = await prisma.client.create({
       data: {
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        email: formattedEmail,
         companyName: companyName?.trim(),
         userId: adminToken,
       },
@@ -207,6 +254,11 @@ app.post("/api/client", async (req, res, next) => {
 
     res.status(201).json(client);
   } catch (error) {
+    if (error.code === "P2003") {
+      return next(
+        new AppError({ message: "Invalid admin token.", statusCode: 401 }),
+      );
+    }
     next(error);
   }
 });

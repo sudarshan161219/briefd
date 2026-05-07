@@ -1,0 +1,255 @@
+/* ── Overlay ─────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+  animation: overlayIn 0.18s ease forwards;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Modal Container ─────────────────────────────── */
+.modal {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: modalIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-shadow:
+    0 0 0 0.5px var(--color-border-tertiary),
+    0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Header ──────────────────────────────────────── */
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.modalEyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--label);
+  margin: 0 0 4px;
+}
+
+.modalTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--primary);
+  margin: 0;
+}
+
+.modalClose {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: transparent;
+  color: var(--label);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+  flex-shrink: 0;
+}
+
+.modalClose:hover:not(:disabled) {
+  background: var(--label);
+  color: var(--background);
+}
+
+.modalClose:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalClose svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Body & Forms ────────────────────────────────── */
+.modalBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.input {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--primary);
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: var(--ring, #7743db);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--bg-muted, #f3f4f6);
+}
+
+/* ── Warning Box (For Delete Modals) ─────────────── */
+.warningBox {
+  display: flex;
+  gap: 12px;
+  background-color: var(--bg-destructive-muted, rgba(239, 68, 68, 0.08));
+  border: 1px solid var(--border-destructive, rgba(239, 68, 68, 0.2));
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.warningIconWrapper {
+  flex-shrink: 0;
+  color: var(--color-destructive, #ef4444);
+}
+
+.warningText p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ── Footer ──────────────────────────────────────── */
+.modalFooter {
+  display: flex;
+  gap: 8px;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.cancelBtn {
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--primary);
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: var(--bg-muted, rgba(0, 0, 0, 0.05));
+}
+
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Delete Button ───────────────────────────────── */
+.deleteBtn {
+  flex: 1;
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--color-destructive, #ef4444);
+  color: white;
+  transition:
+    opacity 0.15s,
+    transform 0.1s,
+    background-color 0.15s;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #dc2626; /* Slightly darker red */
+}
+
+.deleteBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.deleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -4,6 +4,7 @@ import { CreateProfileModal } from "../createUserModal/CreateUserModal";
 import { DownloadModal } from "../downloadModal/Downloadmodal";
 import { CreateClientModal } from "../createClientModal/CreateClientModal";
 import { EditClientModal } from "../editClientModal/EditClientModal";
+import { DeleteUserModal } from "../DeleteUserModal/DeleteUserModal";
 
 export const ModalManager = () => {
   const { isOpen, type } = useModalStore();
@@ -25,6 +26,9 @@ export const ModalManager = () => {
 
     case "EDIT_CLIENT":
       return <EditClientModal />;
+
+    case "DELETE_USER":
+      return <DeleteUserModal />;
 
     default:
       return null;

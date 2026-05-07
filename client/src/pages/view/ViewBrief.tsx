@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { socket } from "@/lib/socket/socket";
-import { Clock, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { SonarPing } from "@/components/sonar_ping/SonarPing";
@@ -41,7 +41,6 @@ export const ViewBrief = () => {
 
     const joinBrief = () => {
       socket.emit("join-brief", brief?.slug);
-      console.log(`connected to ${brief?.slug}`);
     };
 
     // Join immediately if already connected, or on (re)connect
@@ -50,7 +49,6 @@ export const ViewBrief = () => {
 
     // Listen for brief submission
     socket.on(`brief-updated-${brief?.slug}`, () => {
-      console.log("5. Brief updated event received — refetching");
       queryClient.invalidateQueries({ queryKey: ["brief", id] });
     });
 
@@ -105,13 +103,47 @@ export const ViewBrief = () => {
   };
 
   // Still loading initial fetch
-  if (!brief)
+  if (isLoading)
     return (
       <div className={styles.loadingWrapper}>
-        <Clock className={styles.pulseIcon} size={32} />
-        <p>Loading brief...</p>
+        <span className={styles.waitingText}>
+          Loading brief<span className={styles.spinningEmoji}>⏳</span>
+        </span>
       </div>
     );
+
+  if (!brief) {
+    return (
+      <div className={styles.EmptyResponse}>
+        <div style={{ marginBottom: "20px" }}>
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ opacity: 0.5 }}
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+
+        <div className={styles.EmptyResponseInfo}>
+          <h2>Brief Not Found</h2>
+          <p>This brief may have been deleted, or the link is incorrect.</p>
+          <Link to="/dashboard" className={styles.backbtn}>
+            <ArrowLeft size={16} />
+            Return to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (brief?.status === "PENDING") {
     return (
@@ -140,12 +172,12 @@ export const ViewBrief = () => {
         Brief dashboard for {brief?.projectName || "Project"}
       </h1>
 
-      <div className={styles.topbar} component="header">
+      <div className={styles.topbar}>
         <div>
           <nav aria-label="Breadcrumb" className={styles.breadcrumbNav}>
             <ol className={styles.breadcrumbList}>
               <li>
-                <Link to={`/clients/${brief.clientId}`}>Briefs</Link>
+                <Link to={`/clients/${brief?.clientId}`}>Briefs</Link>
                 <span aria-hidden="true" className={styles.separator}>
                   &rsaquo;
                 </span>

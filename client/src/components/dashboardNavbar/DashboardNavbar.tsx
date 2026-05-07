@@ -1,23 +1,14 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Coffee, Sun, Moon, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Coffee, Sun, Moon, Trash } from "lucide-react";
 import { useThemeStore } from "@/store/theme/useThemeStore";
 import { useAuthStore } from "@/store/user/useAuthStore";
 import styles from "./index.module.css";
+import { useModalStore } from "@/store/useModalStore";
 
 export const DashboardNavbar = () => {
-  const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { openModal } = useModalStore();
   const { theme, toggleTheme } = useThemeStore();
-
-  const handleDisconnect = () => {
-    const ok = window.confirm(
-      "Exit workspace? You'll need your secure token to get back in.",
-    );
-    if (ok) {
-      localStorage.removeItem("adminToken");
-      navigate("/");
-    }
-  };
 
   return (
     <nav className={styles.nav}>
@@ -82,12 +73,12 @@ export const DashboardNavbar = () => {
 
           {/* Exit */}
           <button
-            onClick={handleDisconnect}
+            onClick={() => openModal("DELETE_USER")}
             className={styles.exitBtn}
             title="Exit workspace"
           >
-            <LogOut size={13} />
-            <span className={styles.btnLabel}>Exit</span>
+            <Trash size={13} />
+            <span className={styles.btnLabel}>Delete</span>
           </button>
         </div>
       </div>

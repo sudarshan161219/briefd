@@ -2,10 +2,10 @@ import "dotenv/config";
 import { PrismaClient } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-console.log(
-  "Database URL Check:",
-  process.env.DATABASE_URL ? "Defined" : "UNDEFINED",
-);
+// console.log(
+//   "Database URL Check:",
+//   process.env.DATABASE_URL ? "Defined" : "UNDEFINED",
+// );
 
 const connectionString = process.env.DATABASE_URL?.trim();
 
@@ -25,5 +25,4 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({
   adapter,
-  // log: ["query", "info", "warn", "error"],
 });
