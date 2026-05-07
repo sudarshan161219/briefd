@@ -112,7 +112,7 @@ export const DownloadModal = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/brief/${briefId}/download?format=${selected}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/brief/${briefId}/download?format=${selected}`,
       );
       if (!res.ok) throw new Error("Download failed");
 
